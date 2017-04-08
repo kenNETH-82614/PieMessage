@@ -1,8 +1,4 @@
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.*;
-import java.net.Socket;
+import java.io.File;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -10,11 +6,11 @@ import java.util.Date;
  * Created by eric on 11/17/15.
  */
 public class PieOSXClient {
-    public static void main(String[] args) {
-        new PieOSXClient();
-    }
 
-    public PieOSXClient() {
+    private static String address;
+    private static int port;
+
+    private PieOSXClient() {
         doesMessageScriptExist();   // Ensure we have a ~/messages.applescript;
 
         // Start outgoing thread
@@ -28,6 +24,18 @@ public class PieOSXClient {
         Thread inThread = new Thread(incomingThread);
         incomingThread.setThread(inThread);
         inThread.start();
+    }
+
+    public static void main(String[] args) {
+        if (args.length > 0) {
+            address = args[0];
+            port = 5000;
+            if (address.contains(":")) {
+                port = Integer.parseInt(address.split(":")[1]);
+                address = address.split(":")[0];
+            }
+            new PieOSXClient();
+        } else System.out.println("Please provide your.public.ip.address:port as an argument (:port is optional)");
     }
 
     public static String getDateString() {
@@ -46,6 +54,14 @@ public class PieOSXClient {
 
     public static String getHomeDirectory() {
         return System.getProperty("user.home");
+    }
+
+    public static String getAddress() {
+        return address;
+    }
+
+    public static int getPort() {
+        return port;
     }
 
     private boolean doesMessageScriptExist() {

@@ -23,20 +23,12 @@ public class Server {
     HashSet<ClientThread> setOfOSXOutgoingThreads;
     HashSet<ClientThread> setOfOSXIncomingThreads;
 
-    public static void main(String[] args) {
-         new Server();
-    }
-
-    public static Server getInstance() {
-        return instance;
-    }
-
-    public Server() {
+    public Server(int port) {
         if (instance == null) {
             instance = this;
 
             try {
-                ServerSocket sSocket = new ServerSocket(5000);  // using port 5000 for our server socket
+                ServerSocket sSocket = new ServerSocket(port);  // using port 5000 for our server socket
                 System.out.println("Server started at: " + new Date());
                 setOfMobileOutgoingThreads = new HashSet<ClientThread>();
                 setOfMobileIncomingThreads = new HashSet<ClientThread>();
@@ -67,6 +59,18 @@ public class Server {
         } else {
             System.out.println("ERROR: You tried to create more than 1 Server");
         }
+    }
+
+    public static void main(String[] args) {
+        int port = 5000;
+        if (args.length > 0) {
+            port = Integer.parseInt(args[0]);
+        }
+        new Server(port);
+    }
+
+    public static Server getInstance() {
+        return instance;
     }
 
     public void setOsxOutgoingOutput(PrintWriter osxOutgoingOutput) {

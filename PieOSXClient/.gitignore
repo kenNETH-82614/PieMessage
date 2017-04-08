@@ -74,3 +74,8 @@ local.properties
 
 #NDK
 obj/
+
+# Gradle
+gradle/
+gradlew*
+jars

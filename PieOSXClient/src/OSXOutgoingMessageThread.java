@@ -22,7 +22,7 @@ public class OSXOutgoingMessageThread implements Runnable {
     @Override
     public void run() {
         try {
-            socket = new Socket(Constants.socketAddress, 5000);
+            socket = new Socket(PieOSXClient.getAddress(), PieOSXClient.getPort());
             PrintWriter output = new PrintWriter(socket.getOutputStream(), true);
             BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
