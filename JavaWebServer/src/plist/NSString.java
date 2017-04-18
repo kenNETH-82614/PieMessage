@@ -36,6 +36,7 @@ import java.nio.charset.CharsetEncoder;
  */
 public class NSString extends NSObject implements Comparable<Object> {
 
+    private static CharsetEncoder asciiEncoder, utf16beEncoder, utf8Encoder;
     private String content;
 
     /**
@@ -53,10 +54,10 @@ public class NSString extends NSObject implements Comparable<Object> {
     /**
      * Creates an NSString from its binary representation.
      *
-     * @param bytes The binary representation.
+     * @param bytes      The binary representation.
      * @param startIndex int with the index where to start (offset)
-     * @param endIndex int with the index where to stop reading (offset + string length)
-     * @param encoding The encoding of the binary representation, the name of a supported charset.
+     * @param endIndex   int with the index where to stop reading (offset + string length)
+     * @param encoding   The encoding of the binary representation, the name of a supported charset.
      * @throws UnsupportedEncodingException When the given encoding is not supported by the JRE.
      * @see String#String(byte[], String)
      */
@@ -71,6 +72,43 @@ public class NSString extends NSObject implements Comparable<Object> {
      */
     public NSString(String string) {
         content = string;
+    }
+
+    /**
+     * Escapes a string for use in ASCII property lists.
+     *
+     * @param s The unescaped string.
+     * @return The escaped string.
+     */
+    static String escapeStringForASCII(String s) {
+        String out = "";
+        char[] cArray = s.toCharArray();
+        for (int i = 0; i < cArray.length; i++) {
+            char c = cArray[i];
+            if (c > 127) {
+                //non-ASCII Unicode
+                out += "\\U";
+                String hex = Integer.toHexString(c);
+                while (hex.length() < 4)
+                    hex = "0" + hex;
+                out += hex;
+            } else if (c == '\\') {
+                out += "\\\\";
+            } else if (c == '\"') {
+                out += "\\\"";
+            } else if (c == '\b') {
+                out += "\\b";
+            } else if (c == '\n') {
+                out += "\\n";
+            } else if (c == '\r') {
+                out += "\\r";
+            } else if (c == '\t') {
+                out += "\\t";
+            } else {
+                out += c;
+            }
+        }
+        return out;
     }
 
     /**
@@ -148,8 +186,6 @@ public class NSString extends NSObject implements Comparable<Object> {
         return content;
     }
 
-    private static CharsetEncoder asciiEncoder, utf16beEncoder, utf8Encoder;
-
     @Override
     void toXML(StringBuilder xml, int level) {
         indent(xml, level);
@@ -183,7 +219,6 @@ public class NSString extends NSObject implements Comparable<Object> {
         }
         xml.append("</string>");
     }
-
 
     @Override
     public void toBinary(BinaryPropertyListWriter out) throws IOException {
@@ -233,43 +268,6 @@ public class NSString extends NSObject implements Comparable<Object> {
         ascii.append("\"");
         ascii.append(escapeStringForASCII(content));
         ascii.append("\"");
-    }
-
-    /**
-     * Escapes a string for use in ASCII property lists.
-     *
-     * @param s The unescaped string.
-     * @return The escaped string.
-     */
-    static String escapeStringForASCII(String s) {
-        String out = "";
-        char[] cArray = s.toCharArray();
-        for (int i = 0; i < cArray.length; i++) {
-            char c = cArray[i];
-            if (c > 127) {
-                //non-ASCII Unicode
-                out += "\\U";
-                String hex = Integer.toHexString(c);
-                while (hex.length() < 4)
-                    hex = "0" + hex;
-                out += hex;
-            } else if (c == '\\') {
-                out += "\\\\";
-            } else if (c == '\"') {
-                out += "\\\"";
-            } else if (c == '\b') {
-                out += "\\b";
-            } else if (c == '\n') {
-                out += "\\n";
-            } else if (c == '\r') {
-                out += "\\r";
-            } else if (c == '\t') {
-                out += "\\t";
-            } else {
-                out += c;
-            }
-        }
-        return out;
     }
 
     public int compareTo(Object o) {

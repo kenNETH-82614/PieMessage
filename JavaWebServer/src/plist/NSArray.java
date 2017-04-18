@@ -121,8 +121,8 @@ public class NSArray extends NSObject {
     public boolean containsObject(Object obj) {
         NSObject nso = NSObject.wrap(obj);
         for (NSObject elem : array) {
-            if(elem == null) {
-                if(obj == null)
+            if (elem == null) {
+                if (obj == null)
                     return true;
                 continue;
             }
@@ -200,13 +200,13 @@ public class NSArray extends NSObject {
 
     @Override
     public boolean equals(Object obj) {
-        if(obj == null)
+        if (obj == null)
             return false;
-        if(obj.getClass().equals(NSArray.class)) {
+        if (obj.getClass().equals(NSArray.class)) {
             return Arrays.equals(((NSArray) obj).getArray(), this.array);
         } else {
             NSObject nso = NSObject.wrap(obj);
-            if(nso.getClass().equals(NSArray.class)) {
+            if (nso.getClass().equals(NSArray.class)) {
                 return Arrays.equals(((NSArray) nso).getArray(), this.array);
             }
         }

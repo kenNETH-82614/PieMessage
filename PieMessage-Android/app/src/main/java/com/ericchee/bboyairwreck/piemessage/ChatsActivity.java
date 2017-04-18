@@ -1,12 +1,9 @@
 package com.ericchee.bboyairwreck.piemessage;
 
-import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -14,20 +11,19 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.TreeMap;
+import java.util.Collections;
+import java.util.Comparator;
 
 
-public class ChatsActivity extends AppCompatActivity implements ReceiveMessagesService.Callbacks {
-    public static final String TAG = ChatsActivity.class.getSimpleName();
-    private ListView lvChats;
-    private ChatsAdapter chatsAdapter;
-    private ArrayList<Chat> chatsList;
-    ReceiveMessagesService receiveMessagesService;
-    private boolean boundReceiveService = false;
-
+public class ChatsActivity extends AppCompatActivity {
+    private static final String TAG = ChatsActivity.class.getSimpleName();
     private static final int SETTINGS_RESULT = 1;
+    private SwipeRefreshLayout swipeContainer;
+    private ListView lvChats;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,6 +34,36 @@ public class ChatsActivity extends AppCompatActivity implements ReceiveMessagesS
 
         Log.i(TAG, "creating ChatsActivity");
 
+        swipeContainer = (SwipeRefreshLayout) findViewById(R.id.swipeContainer);
+        swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                PieMessageApplication.getInstance().getServerBridge().requestNew(true, new ServerBridge.ResponseCallback() {
+                    @Override
+                    public void run(JSONObject responseJson) {
+                        try {
+                            if (responseJson.getInt(Constants.NUM_MESSAGES) > 0) {
+                                for (Message message : ServerBridge.parseMessages(responseJson)) {
+                                    PieMessageApplication.getInstance().addMessage(message);
+                                }
+                            }
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (swipeContainer.isRefreshing()) swipeContainer.setRefreshing(false);
+                                    reloadChatListAndAdapter();
+                                }
+                            });
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+            }
+        });
+
+        swipeContainer.setColorSchemeResources(android.R.color.holo_blue_dark);
+
         reloadChatListAndAdapter();
 
         // Navigate to MessageActivity when selecting chat item
@@ -47,8 +73,8 @@ public class ChatsActivity extends AppCompatActivity implements ReceiveMessagesS
                 Chat chat = (Chat) parent.getItemAtPosition(position);
 
                 Intent messageIntent = new Intent(ChatsActivity.this, MessageActivity.class);
-                messageIntent.putExtra(Constants.chatROWID, chat.cROWID);
-                messageIntent.putExtra(Constants.chatHandlesString, chat.getHandlesString());
+                messageIntent.putExtra(Constants.Col.CHAT_ID, chat.getId());
+                messageIntent.putExtra(Constants.Col.CHAT_NAME, chat.getName());
                 startActivity(messageIntent);
             }
         });
@@ -58,80 +84,29 @@ public class ChatsActivity extends AppCompatActivity implements ReceiveMessagesS
             @Override
             public void onClick(View view) {
                 Intent messageIntent = new Intent(ChatsActivity.this, MessageActivity.class);
+                messageIntent.putExtra(Constants.Col.CHAT_ID, "");
+                messageIntent.putExtra(Constants.Col.CHAT_NAME, "");
                 startActivity(messageIntent);
             }
         });
 
-        bindToReceiveService();
+        PieMessageApplication.getInstance().getServerBridge().addActivity(this);
     }
 
-    private void reloadChatListAndAdapter() {
-        PieSQLiteOpenHelper dbHelper = PieMessageApplication.getInstance().getDbHelper();
-        dbHelper.getAllChats();
+    void reloadChatListAndAdapter() {
 
-        TreeMap<Long, Chat> chatsMap = PieMessageApplication.getInstance().getChatsMap();
-
-        chatsList = new ArrayList<>();
-
-        for (Long cROWID : chatsMap.keySet()) {
-            Log.i(TAG, "parsing chatsMap");
-            Chat chat = chatsMap.get(cROWID);
-            chatsList.add(chat);
-//            // todo delete
-//            String handlesString = "";
-//            int i = 0;
-//            for (String handle : chat.handles) {
-//                handlesString += handle;
-//                if (i < chat.handles.size() -1) {
-//                    handlesString += ", ";
-//                }
-//                i++;
-//            }
-//
-//            Log.i(TAG, "Chat - " + handlesString);
-        }
+        ArrayList<Chat> chatsList = new ArrayList<>(PieMessageApplication.getInstance().getChats().values());
+        Collections.sort(chatsList, new Comparator<Chat>() {
+            @Override
+            public int compare(Chat o1, Chat o2) {
+                return o2.compareTo(o1);
+            }
+        });
 
         // Set adapter for chats list view
         lvChats = (ListView) findViewById(R.id.lvChats);
-        chatsAdapter = new ChatsAdapter(this, chatsList);
+        ChatsAdapter chatsAdapter = new ChatsAdapter(this, chatsList);
         lvChats.setAdapter(chatsAdapter);
-    }
-
-    private ServiceConnection mConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            Log.d(TAG, "onServiceConnected called");
-
-            // Ever service has a binder. In service class we created LocalBinder to get service instance
-            // - set our service field equal to the service instance
-            ReceiveMessagesService.LocalBinder binder = (ReceiveMessagesService.LocalBinder) service;
-            receiveMessagesService = binder.getServiceInstance();
-
-            // Register this activity to get callbacks
-            receiveMessagesService.registerActivity(ChatsActivity.this);
-
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            Log.d(TAG, "Service has disconnected");
-            boundReceiveService = false;
-        }
-    };
-
-    private void bindToReceiveService() {
-        Intent receiveMessagesServiceIntent = new Intent(this, ReceiveMessagesService.class);
-        boundReceiveService = getApplicationContext().bindService(receiveMessagesServiceIntent, mConnection, Context.BIND_AUTO_CREATE);
-    }
-
-    private void unbindToReceiveService() {
-        if (boundReceiveService) {
-            if (receiveMessagesService != null) {
-                receiveMessagesService.unregisterActivity();
-            }
-            getApplicationContext().unbindService(mConnection);
-            boundReceiveService = false;
-        }
     }
 
     @Override
@@ -162,31 +137,21 @@ public class ChatsActivity extends AppCompatActivity implements ReceiveMessagesS
     protected void onResume() {
         super.onResume();
         Log.i(TAG, "Resuming ChatsActivity");
-        bindToReceiveService();
+        PieMessageApplication.getInstance().getServerBridge().addActivity(this);
         reloadChatListAndAdapter();
     }
 
     @Override
     protected void onDestroy() {
         Log.i(TAG, "Destroying activity");
-        unbindToReceiveService();
+        PieMessageApplication.getInstance().getServerBridge().removeActivity(this);
         super.onDestroy();
     }
 
     @Override
     protected void onPause() {
         Log.i(TAG, "Pausing activity");
-        unbindToReceiveService();
+        PieMessageApplication.getInstance().getServerBridge().removeActivity(this);
         super.onPause();
-    }
-
-    @Override
-    public void onReceivedMessages(String receiveMessagesJsonString) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                reloadChatListAndAdapter();
-            }
-        });
     }
 }

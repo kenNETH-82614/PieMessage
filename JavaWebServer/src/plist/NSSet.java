@@ -198,6 +198,7 @@ public class NSSet extends NSObject {
 
     /**
      * Gets the underlying data structure in which this NSSets stores its content.
+     *
      * @return A Set object.
      */
     Set<NSObject> getSet() {

@@ -7,11 +7,11 @@ apply plugin: 'application'
 mainClassName = 'Server'
 
 repositories {
-  mavenCentral()
+    mavenCentral()
 }
 
 dependencies {
-  compile 'org.json:json:20160212'
+    compile 'org.json:json:20160212'
 }
 
 sourceCompatibility = 1.8
@@ -19,13 +19,13 @@ targetCompatibility = 1.8
 
 jar {
     baseName = 'server'
-    version =  '0.1.0'
+    version = '0.1.0'
 }
 
 sourceSets {
-  main {
-    java {
-      srcDir 'src'
+    main {
+        java {
+            srcDir 'src'
+        }
     }
-  }
 }

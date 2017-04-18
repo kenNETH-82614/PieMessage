@@ -45,14 +45,14 @@ import java.util.List;
  */
 public class XMLPropertyListParser {
 
+    private static DocumentBuilderFactory docBuilderFactory = null;
+
     /**
      * Instantiation is prohibited by outside classes.
      */
     protected XMLPropertyListParser() {
         /** empty **/
     }
-
-    private static DocumentBuilderFactory docBuilderFactory = null;
 
     /**
      * Initialize the document builder factory so that it can be reused and does not need to
@@ -70,7 +70,7 @@ public class XMLPropertyListParser {
      *
      * @return A new DocBuilder that can parse property lists w/o an internet connection.
      * @throws ParserConfigurationException If a document builder for parsing a XML property list
-     *                                                        could not be created. This should not occur.
+     *                                      could not be created. This should not occur.
      */
     private static synchronized DocumentBuilder getDocBuilder() throws ParserConfigurationException {
         if (docBuilderFactory == null)
@@ -95,13 +95,13 @@ public class XMLPropertyListParser {
      *
      * @param f The XML property list file.
      * @return The root object of the property list. This is usually a NSDictionary but can also be a NSArray.
-     * @see DocumentBuilder#parse(File)
-     * @throws ParserConfigurationException If a document builder for parsing a XML property list
-     *                                                        could not be created. This should not occur.
-     * @throws IOException If any IO error occurs while reading the file.
-     * @throws SAXException If any parse error occurs.
+     * @throws ParserConfigurationException             If a document builder for parsing a XML property list
+     *                                                  could not be created. This should not occur.
+     * @throws IOException                              If any IO error occurs while reading the file.
+     * @throws SAXException                             If any parse error occurs.
      * @throws com.dd.plist.PropertyListFormatException If the given property list has an invalid format.
-     * @throws ParseException If a date string could not be parsed.
+     * @throws ParseException                           If a date string could not be parsed.
+     * @see DocumentBuilder#parse(File)
      */
     public static NSObject parse(File f) throws ParserConfigurationException, IOException, SAXException, PropertyListFormatException, ParseException {
         DocumentBuilder docBuilder = getDocBuilder();
@@ -116,12 +116,12 @@ public class XMLPropertyListParser {
      *
      * @param bytes The byte array containing the property list's data.
      * @return The root object of the property list. This is usually a NSDictionary but can also be a NSArray.
-     * @throws ParserConfigurationException If a document builder for parsing a XML property list
-     *                                                        could not be created. This should not occur.
-     * @throws IOException If any IO error occurs while reading the file.
-     * @throws SAXException If any parse error occurs.
+     * @throws ParserConfigurationException             If a document builder for parsing a XML property list
+     *                                                  could not be created. This should not occur.
+     * @throws IOException                              If any IO error occurs while reading the file.
+     * @throws SAXException                             If any parse error occurs.
      * @throws com.dd.plist.PropertyListFormatException If the given property list has an invalid format.
-     * @throws ParseException If a date string could not be parsed.
+     * @throws ParseException                           If a date string could not be parsed.
      */
     public static NSObject parse(final byte[] bytes) throws ParserConfigurationException, ParseException, SAXException, PropertyListFormatException, IOException {
         ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
@@ -133,13 +133,13 @@ public class XMLPropertyListParser {
      *
      * @param is The input stream pointing to the property list's data.
      * @return The root object of the property list. This is usually a NSDictionary but can also be a NSArray.
-     * @see DocumentBuilder#parse(InputStream)
-     * @throws ParserConfigurationException If a document builder for parsing a XML property list
-     *                                                        could not be created. This should not occur.
-     * @throws IOException If any IO error occurs while reading the file.
-     * @throws SAXException If any parse error occurs.
+     * @throws ParserConfigurationException             If a document builder for parsing a XML property list
+     *                                                  could not be created. This should not occur.
+     * @throws IOException                              If any IO error occurs while reading the file.
+     * @throws SAXException                             If any parse error occurs.
      * @throws com.dd.plist.PropertyListFormatException If the given property list has an invalid format.
-     * @throws ParseException If a date string could not be parsed.
+     * @throws ParseException                           If a date string could not be parsed.
+     * @see DocumentBuilder#parse(InputStream)
      */
     public static NSObject parse(InputStream is) throws ParserConfigurationException, IOException, SAXException, PropertyListFormatException, ParseException {
         DocumentBuilder docBuilder = getDocBuilder();
@@ -154,9 +154,9 @@ public class XMLPropertyListParser {
      *
      * @param doc The XML document.
      * @return The root NSObject of the property list contained in the XML document.
-     * @throws IOException If any IO error occurs while reading the file.
+     * @throws IOException                              If any IO error occurs while reading the file.
      * @throws com.dd.plist.PropertyListFormatException If the given property list has an invalid format.
-     * @throws ParseException If a date string could not be parsed.
+     * @throws ParseException                           If a date string could not be parsed.
      */
     public static NSObject parse(Document doc) throws PropertyListFormatException, IOException, ParseException {
         DocumentType docType = doc.getDoctype();
@@ -193,7 +193,7 @@ public class XMLPropertyListParser {
      *
      * @param n The XML node.
      * @return The corresponding NSObject.
-     * @throws IOException If any IO error occurs while parsing a Base64 encoded NSData object.
+     * @throws IOException    If any IO error occurs while parsing a Base64 encoded NSData object.
      * @throws ParseException If a date string could not be parsed.
      */
     private static NSObject parseObject(Node n) throws ParseException, IOException {

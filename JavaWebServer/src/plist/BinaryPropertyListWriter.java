@@ -23,12 +23,7 @@
 
 package plist;
 
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -46,6 +41,30 @@ public class BinaryPropertyListWriter {
     public static final int VERSION_10 = 10;
     public static final int VERSION_15 = 15;
     public static final int VERSION_20 = 20;
+    private int version = VERSION_00;
+    // raw output stream to result file
+    private OutputStream out;
+    // # of bytes written so far
+    private long count;
+    // map from object to its ID
+    private Map<NSObject, Integer> idMap = new HashMap<NSObject, Integer>();
+    private int idSizeInBytes;
+
+    /**
+     * Creates a new binary property list writer
+     *
+     * @param outStr The output stream into which the binary property list will be written
+     * @throws IOException When an IO error occurs while writing to the stream or the object structure contains
+     *                     data that cannot be saved.
+     */
+    BinaryPropertyListWriter(OutputStream outStr) throws IOException {
+        out = new BufferedOutputStream(outStr);
+    }
+
+    BinaryPropertyListWriter(OutputStream outStr, int version) throws IOException {
+        this.version = version;
+        out = new BufferedOutputStream(outStr);
+    }
 
     /**
      * Finds out the minimum binary property list format version that
@@ -134,32 +153,10 @@ public class BinaryPropertyListWriter {
         return bout.toByteArray();
     }
 
-    private int version = VERSION_00;
-
-    // raw output stream to result file
-    private OutputStream out;
-
-    // # of bytes written so far
-    private long count;
-
-    // map from object to its ID
-    private Map<NSObject, Integer> idMap = new HashMap<NSObject, Integer>();
-    private int idSizeInBytes;
-
-    /**
-     * Creates a new binary property list writer
-     *
-     * @param outStr The output stream into which the binary property list will be written
-     * @throws IOException When an IO error occurs while writing to the stream or the object structure contains
-     *                     data that cannot be saved.
-     */
-    BinaryPropertyListWriter(OutputStream outStr) throws IOException {
-        out = new BufferedOutputStream(outStr);
-    }
-
-    BinaryPropertyListWriter(OutputStream outStr, int version) throws IOException {
-        this.version = version;
-        out = new BufferedOutputStream(outStr);
+    private static int computeIdSizeInBytes(int numberOfIds) {
+        if (numberOfIds < 256) return 1;
+        if (numberOfIds < 65536) return 2;
+        return 4;
     }
 
     void write(NSObject root) throws IOException {
@@ -240,12 +237,6 @@ public class BinaryPropertyListWriter {
 
     int getID(NSObject obj) {
         return idMap.get(obj);
-    }
-
-    private static int computeIdSizeInBytes(int numberOfIds) {
-        if (numberOfIds < 256) return 1;
-        if (numberOfIds < 65536) return 2;
-        return 4;
     }
 
     private int computeOffsetSizeInBytes(long maxOffset) {

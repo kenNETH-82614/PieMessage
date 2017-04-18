@@ -14,9 +14,9 @@ import java.util.ArrayList;
  * Created by echee on 12/16/15.
  */
 public class ChatsAdapter extends ArrayAdapter<Chat> {
-    public static final String TAG = ChatsAdapter.class.getSimpleName();
+    private static final String TAG = ChatsAdapter.class.getSimpleName();
 
-    public ChatsAdapter(Context context, ArrayList<Chat> chats) {
+    ChatsAdapter(Context context, ArrayList<Chat> chats) {
         super(context, 0, chats);
     }
 
@@ -32,13 +32,23 @@ public class ChatsAdapter extends ArrayAdapter<Chat> {
 
         TextView tvChatName = (TextView) convertView.findViewById(R.id.tvChatName);
         TextView tvLastMessage = (TextView) convertView.findViewById(R.id.tvLastMessage);
+        View vUnreadCircle = convertView.findViewById(R.id.vUnreadCircle);
 
-        String handlesString = chat.getHandlesString();
-
-        String lastMessageText = chat.getLastText();
-
-        tvChatName.setText(handlesString);
+        String name = chat.getName();
+        String lastMessageText = chat.getLastMessage().getMsg();
+        if (chat.getLastMessage().getMessageType() == MessageType.RECEIVED) {
+            lastMessageText = chat.getLastMessage().getSender() + ": " + lastMessageText;
+        }
+        tvChatName.setText(name);
         tvLastMessage.setText(lastMessageText);
+
+        for (Message message : chat.getMessages()) {
+            if (!message.isRead()) {
+                vUnreadCircle.setVisibility(View.VISIBLE);
+                break;
+            }
+        }
+
 
         return convertView;
     }

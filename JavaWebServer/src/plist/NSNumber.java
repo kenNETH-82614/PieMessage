@@ -67,7 +67,7 @@ public class NSNumber extends NSObject implements Comparable<Object> {
      * @see #INTEGER
      * @see #REAL
      */
-    public NSNumber(byte[] bytes, int type){
+    public NSNumber(byte[] bytes, int type) {
         this(bytes, 0, bytes.length, type);
     }
 
@@ -75,14 +75,14 @@ public class NSNumber extends NSObject implements Comparable<Object> {
      * Parses integers and real numbers from their binary representation.
      * <i>Note: real numbers are not yet supported.</i>
      *
-     * @param bytes array of bytes that contains this number's binary representation
+     * @param bytes      array of bytes that contains this number's binary representation
      * @param startIndex int with the position where to start reading from the byte array
-     * @param endIndex int with the position where to end reading from the byte array
-     * @param type  The type of number
+     * @param endIndex   int with the position where to end reading from the byte array
+     * @param type       The type of number
      * @see #INTEGER
      * @see #REAL
      */
-    public NSNumber(byte[] bytes, final int startIndex, final int endIndex, final int type){
+    public NSNumber(byte[] bytes, final int startIndex, final int endIndex, final int type) {
         switch (type) {
             case INTEGER: {
                 doubleValue = longValue = BinaryPropertyListParser.parseLong(bytes, startIndex, endIndex);
@@ -124,7 +124,7 @@ public class NSNumber extends NSObject implements Comparable<Object> {
             } catch (Exception ex2) {
                 try {
                     boolValue = text.toLowerCase().equals("true") || text.toLowerCase().equals("yes");
-                    if(!boolValue && !(text.toLowerCase().equals("false") || text.toLowerCase().equals("no"))) {
+                    if (!boolValue && !(text.toLowerCase().equals("false") || text.toLowerCase().equals("no"))) {
                         throw new Exception("not a boolean");
                     }
                     type = BOOLEAN;

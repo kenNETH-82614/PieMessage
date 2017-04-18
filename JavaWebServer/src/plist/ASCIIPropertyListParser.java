@@ -22,11 +22,7 @@
  */
 package plist;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.nio.CharBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
@@ -53,9 +49,70 @@ import java.util.List;
  * GnuStep - NSPropertyListSerialization class documentation
  * </a></li>
  * </ul>
+ *
  * @author Daniel Dreibrodt
  */
 public class ASCIIPropertyListParser {
+
+    public static final char WHITESPACE_SPACE = ' ';
+    public static final char WHITESPACE_TAB = '\t';
+    public static final char WHITESPACE_NEWLINE = '\n';
+    public static final char WHITESPACE_CARRIAGE_RETURN = '\r';
+    public static final char ARRAY_BEGIN_TOKEN = '(';
+    public static final char ARRAY_END_TOKEN = ')';
+    public static final char ARRAY_ITEM_DELIMITER_TOKEN = ',';
+    public static final char DICTIONARY_BEGIN_TOKEN = '{';
+    public static final char DICTIONARY_END_TOKEN = '}';
+    public static final char DICTIONARY_ASSIGN_TOKEN = '=';
+    public static final char DICTIONARY_ITEM_DELIMITER_TOKEN = ';';
+    public static final char QUOTEDSTRING_BEGIN_TOKEN = '"';
+    public static final char QUOTEDSTRING_END_TOKEN = '"';
+    public static final char QUOTEDSTRING_ESCAPE_TOKEN = '\\';
+    public static final char DATA_BEGIN_TOKEN = '<';
+    public static final char DATA_END_TOKEN = '>';
+    public static final char DATA_GSOBJECT_BEGIN_TOKEN = '*';
+    public static final char DATA_GSDATE_BEGIN_TOKEN = 'D';
+    public static final char DATA_GSBOOL_BEGIN_TOKEN = 'B';
+    public static final char DATA_GSBOOL_TRUE_TOKEN = 'Y';
+    public static final char DATA_GSBOOL_FALSE_TOKEN = 'N';
+    public static final char DATA_GSINT_BEGIN_TOKEN = 'I';
+    public static final char DATA_GSREAL_BEGIN_TOKEN = 'R';
+    public static final char DATE_DATE_FIELD_DELIMITER = '-';
+    public static final char DATE_TIME_FIELD_DELIMITER = ':';
+    public static final char DATE_GS_DATE_TIME_DELIMITER = ' ';
+    public static final char DATE_APPLE_DATE_TIME_DELIMITER = 'T';
+    public static final char DATE_APPLE_END_TOKEN = 'Z';
+    public static final char COMMENT_BEGIN_TOKEN = '/';
+    public static final char MULTILINE_COMMENT_SECOND_TOKEN = '*';
+    public static final char SINGLELINE_COMMENT_SECOND_TOKEN = '/';
+    public static final char MULTILINE_COMMENT_END_TOKEN = '/';
+    /**
+     * Used to encode the parsed strings
+     */
+    private static CharsetEncoder asciiEncoder;
+    /**
+     * Property list source data
+     */
+    private byte[] data;
+    /**
+     * Current parsing index
+     */
+    private int index;
+
+    /**
+     * Only allow subclasses to change instantiation.
+     */
+    protected ASCIIPropertyListParser() {
+
+    }
+    /**
+     * Creates a new parser for the given property list content.
+     *
+     * @param propertyListContent The content of the property list that is to be parsed.
+     */
+    private ASCIIPropertyListParser(byte[] propertyListContent) {
+        data = propertyListContent;
+    }
 
     /**
      * Parses an ASCII property list file.
@@ -63,7 +120,7 @@ public class ASCIIPropertyListParser {
      * @param f The ASCII property list file.
      * @return The root object of the property list. This is usually a NSDictionary but can also be a NSArray.
      * @throws ParseException When an error occurs during parsing.
-     * @throws IOException When an error occured while reading from the input stream.
+     * @throws IOException    When an error occured while reading from the input stream.
      */
     public static NSObject parse(File f) throws IOException, ParseException {
         return parse(new FileInputStream(f));
@@ -75,7 +132,7 @@ public class ASCIIPropertyListParser {
      * @param in The input stream that points to the property list's data.
      * @return The root object of the property list. This is usually a NSDictionary but can also be a NSArray.
      * @throws ParseException When an error occurs during parsing.
-     * @throws IOException When an error occured while reading from the input stream.
+     * @throws IOException    When an error occured while reading from the input stream.
      */
     public static NSObject parse(InputStream in) throws ParseException, IOException {
         byte[] buf = PropertyListParser.readAll(in);
@@ -95,69 +152,99 @@ public class ASCIIPropertyListParser {
         return parser.parse();
     }
 
-    public static final char WHITESPACE_SPACE = ' ';
-    public static final char WHITESPACE_TAB = '\t';
-    public static final char WHITESPACE_NEWLINE = '\n';
-    public static final char WHITESPACE_CARRIAGE_RETURN = '\r';
-
-    public static final char ARRAY_BEGIN_TOKEN = '(';
-    public static final char ARRAY_END_TOKEN = ')';
-    public static final char ARRAY_ITEM_DELIMITER_TOKEN = ',';
-
-    public static final char DICTIONARY_BEGIN_TOKEN = '{';
-    public static final char DICTIONARY_END_TOKEN = '}';
-    public static final char DICTIONARY_ASSIGN_TOKEN = '=';
-    public static final char DICTIONARY_ITEM_DELIMITER_TOKEN = ';';
-
-    public static final char QUOTEDSTRING_BEGIN_TOKEN = '"';
-    public static final char QUOTEDSTRING_END_TOKEN = '"';
-    public static final char QUOTEDSTRING_ESCAPE_TOKEN = '\\';
-
-    public static final char DATA_BEGIN_TOKEN = '<';
-    public static final char DATA_END_TOKEN = '>';
-
-    public static final char DATA_GSOBJECT_BEGIN_TOKEN = '*';
-    public static final char DATA_GSDATE_BEGIN_TOKEN = 'D';
-    public static final char DATA_GSBOOL_BEGIN_TOKEN = 'B';
-    public static final char DATA_GSBOOL_TRUE_TOKEN = 'Y';
-    public static final char DATA_GSBOOL_FALSE_TOKEN = 'N';
-    public static final char DATA_GSINT_BEGIN_TOKEN = 'I';
-    public static final char DATA_GSREAL_BEGIN_TOKEN = 'R';
-
-    public static final char DATE_DATE_FIELD_DELIMITER = '-';
-    public static final char DATE_TIME_FIELD_DELIMITER = ':';
-    public static final char DATE_GS_DATE_TIME_DELIMITER = ' ';
-    public static final char DATE_APPLE_DATE_TIME_DELIMITER = 'T';
-    public static final char DATE_APPLE_END_TOKEN = 'Z';
-
-    public static final char COMMENT_BEGIN_TOKEN = '/';
-    public static final char MULTILINE_COMMENT_SECOND_TOKEN = '*';
-    public static final char SINGLELINE_COMMENT_SECOND_TOKEN = '/';
-    public static final char MULTILINE_COMMENT_END_TOKEN = '/';
-
     /**
-     * Property list source data
+     * Parses a string according to the format specified for ASCII property lists.
+     * Such strings can contain escape sequences which are unescaped in this method.
+     *
+     * @param s The escaped string according to the ASCII property list format, without leading and trailing quotation marks.
+     * @return The unescaped string in UTF-8 or ASCII format, depending on the contained characters.
+     * @throws UnsupportedEncodingException If the en-/decoder for the UTF-8 or ASCII encoding could not be loaded
+     * @throws CharacterCodingException     If the string is encoded neither in ASCII nor in UTF-8
      */
-    private byte[] data;
-    /**
-     * Current parsing index
-     */
-    private int index;
+    public static synchronized String parseQuotedString(String s) throws UnsupportedEncodingException, CharacterCodingException {
+        List<Byte> strBytes = new LinkedList<Byte>();
+        StringCharacterIterator iterator = new StringCharacterIterator(s);
+        char c = iterator.current();
 
-    /**
-     * Only allow subclasses to change instantiation.
-     */
-    protected ASCIIPropertyListParser() {
+        while (iterator.getIndex() < iterator.getEndIndex()) {
+            switch (c) {
+                case '\\': { //An escaped sequence is following
+                    byte[] bts = parseEscapedSequence(iterator).getBytes("UTF-8");
+                    for (byte b : bts)
+                        strBytes.add(b);
+                    break;
+                }
+                default: { //a normal ASCII char
+                    strBytes.add((byte) 0);
+                    strBytes.add((byte) c);
+                    break;
+                }
+            }
+            c = iterator.next();
+        }
+        byte[] bytArr = new byte[strBytes.size()];
+        int i = 0;
+        for (Byte b : strBytes) {
+            bytArr[i] = b.byteValue();
+            i++;
+        }
+        //Build string
+        String result = new String(bytArr, "UTF-8");
+        CharBuffer charBuf = CharBuffer.wrap(result);
 
+        //If the string can be represented in the ASCII codepage
+        // --> use ASCII encoding
+        if (asciiEncoder == null)
+            asciiEncoder = Charset.forName("ASCII").newEncoder();
+        if (asciiEncoder.canEncode(charBuf))
+            return asciiEncoder.encode(charBuf).asCharBuffer().toString();
+
+        //The string contains characters outside the ASCII codepage
+        // --> use the UTF-8 encoded string
+        return result;
     }
 
     /**
-     * Creates a new parser for the given property list content.
+     * Unescapes an escaped character sequence, e.g. \\u00FC.
      *
-     * @param propertyListContent The content of the property list that is to be parsed.
+     * @param iterator The string character iterator pointing to the first character after the backslash
+     * @return The unescaped character as a string.
+     * @throws UnsupportedEncodingException If an invalid Unicode or ASCII escape sequence is found.
      */
-    private ASCIIPropertyListParser(byte[] propertyListContent) {
-        data = propertyListContent;
+    private static String parseEscapedSequence(StringCharacterIterator iterator) throws UnsupportedEncodingException {
+        char c = iterator.next();
+        if (c == '\\') {
+            return new String(new byte[]{0, '\\'}, "UTF-8");
+        } else if (c == '"') {
+            return new String(new byte[]{0, '\"'}, "UTF-8");
+        } else if (c == 'b') {
+            return new String(new byte[]{0, '\b'}, "UTF-8");
+        } else if (c == 'n') {
+            return new String(new byte[]{0, '\n'}, "UTF-8");
+        } else if (c == 'r') {
+            return new String(new byte[]{0, '\r'}, "UTF-8");
+        } else if (c == 't') {
+            return new String(new byte[]{0, '\t'}, "UTF-8");
+        } else if (c == 'U' || c == 'u') {
+            //4 digit hex Unicode value
+            String byte1 = "";
+            byte1 += iterator.next();
+            byte1 += iterator.next();
+            String byte2 = "";
+            byte2 += iterator.next();
+            byte2 += iterator.next();
+            byte[] stringBytes = {(byte) Integer.parseInt(byte1, 16), (byte) Integer.parseInt(byte2, 16)};
+            return new String(stringBytes, "UTF-8");
+        } else {
+            //3 digit octal ASCII value
+            String num = "";
+            num += c;
+            num += iterator.next();
+            num += iterator.next();
+            int asciiCode = Integer.parseInt(num, 8);
+            byte[] stringBytes = {0, (byte) asciiCode};
+            return new String(stringBytes, "UTF-8");
+        }
     }
 
     /**
@@ -331,7 +418,7 @@ public class ASCIIPropertyListParser {
     public NSObject parse() throws ParseException {
         index = 0;
         //Skip Unicode byte order mark (BOM)
-        if(data.length >= 3 && (data[0] & 0xFF) == 0xEF && (data[1] & 0xFF) == 0xBB && (data[2] & 0xFF) == 0xBF)
+        if (data.length >= 3 && (data[0] & 0xFF) == 0xEF && (data[1] & 0xFF) == 0xBB && (data[2] & 0xFF) == 0xBF)
             skip(3);
         skipWhitespacesAndComments();
         expect(DICTIONARY_BEGIN_TOKEN, ARRAY_BEGIN_TOKEN, COMMENT_BEGIN_TOKEN);
@@ -518,7 +605,7 @@ public class ASCIIPropertyListParser {
         if (numericalString.length() > 4 && numericalString.charAt(4) == DATE_DATE_FIELD_DELIMITER) {
             try {
                 return new NSDate(numericalString);
-            } catch(Exception ex) {
+            } catch (Exception ex) {
                 //An exception occurs if the string is not a date but just a string
             }
         }
@@ -565,106 +652,6 @@ public class ASCIIPropertyListParser {
         //skip end token
         skip();
         return unescapedString;
-    }
-
-    /**
-     * Used to encode the parsed strings
-     */
-    private static CharsetEncoder asciiEncoder;
-
-    /**
-     * Parses a string according to the format specified for ASCII property lists.
-     * Such strings can contain escape sequences which are unescaped in this method.
-     *
-     * @param s The escaped string according to the ASCII property list format, without leading and trailing quotation marks.
-     * @return The unescaped string in UTF-8 or ASCII format, depending on the contained characters.
-     * @throws UnsupportedEncodingException If the en-/decoder for the UTF-8 or ASCII encoding could not be loaded
-     * @throws CharacterCodingException If the string is encoded neither in ASCII nor in UTF-8
-     */
-    public static synchronized String parseQuotedString(String s) throws UnsupportedEncodingException, CharacterCodingException {
-        List<Byte> strBytes = new LinkedList<Byte>();
-        StringCharacterIterator iterator = new StringCharacterIterator(s);
-        char c = iterator.current();
-
-        while (iterator.getIndex() < iterator.getEndIndex()) {
-            switch (c) {
-                case '\\': { //An escaped sequence is following
-                    byte[] bts = parseEscapedSequence(iterator).getBytes("UTF-8");
-                    for (byte b : bts)
-                        strBytes.add(b);
-                    break;
-                }
-                default: { //a normal ASCII char
-                    strBytes.add((byte) 0);
-                    strBytes.add((byte) c);
-                    break;
-                }
-            }
-            c = iterator.next();
-        }
-        byte[] bytArr = new byte[strBytes.size()];
-        int i = 0;
-        for (Byte b : strBytes) {
-            bytArr[i] = b.byteValue();
-            i++;
-        }
-        //Build string
-        String result = new String(bytArr, "UTF-8");
-        CharBuffer charBuf = CharBuffer.wrap(result);
-
-        //If the string can be represented in the ASCII codepage
-        // --> use ASCII encoding
-        if (asciiEncoder == null)
-            asciiEncoder = Charset.forName("ASCII").newEncoder();
-        if (asciiEncoder.canEncode(charBuf))
-            return asciiEncoder.encode(charBuf).asCharBuffer().toString();
-
-        //The string contains characters outside the ASCII codepage
-        // --> use the UTF-8 encoded string
-        return result;
-    }
-
-    /**
-     * Unescapes an escaped character sequence, e.g. \\u00FC.
-     *
-     * @param iterator The string character iterator pointing to the first character after the backslash
-     * @return The unescaped character as a string.
-     * @throws UnsupportedEncodingException If an invalid Unicode or ASCII escape sequence is found.
-     */
-    private static String parseEscapedSequence(StringCharacterIterator iterator) throws UnsupportedEncodingException {
-        char c = iterator.next();
-        if (c == '\\') {
-            return new String(new byte[]{0, '\\'}, "UTF-8");
-        } else if (c == '"') {
-            return new String(new byte[]{0, '\"'}, "UTF-8");
-        } else if (c == 'b') {
-            return new String(new byte[]{0, '\b'}, "UTF-8");
-        } else if (c == 'n') {
-            return new String(new byte[]{0, '\n'}, "UTF-8");
-        } else if (c == 'r') {
-            return new String(new byte[]{0, '\r'}, "UTF-8");
-        } else if (c == 't') {
-            return new String(new byte[]{0, '\t'}, "UTF-8");
-        } else if (c == 'U' || c == 'u') {
-            //4 digit hex Unicode value
-            String byte1 = "";
-            byte1 += iterator.next();
-            byte1 += iterator.next();
-            String byte2 = "";
-            byte2 += iterator.next();
-            byte2 += iterator.next();
-            byte[] stringBytes = {(byte) Integer.parseInt(byte1, 16), (byte) Integer.parseInt(byte2, 16)};
-            return new String(stringBytes, "UTF-8");
-        } else {
-            //3 digit octal ASCII value
-            String num = "";
-            num += c;
-            num += iterator.next();
-            num += iterator.next();
-            int asciiCode = Integer.parseInt(num, 8);
-            byte[] stringBytes = {0, (byte) asciiCode};
-            return new String(stringBytes, "UTF-8");
-        }
     }
 
 }

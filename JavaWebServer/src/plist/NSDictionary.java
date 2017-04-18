@@ -24,18 +24,12 @@
 package plist;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * A NSDictionary is a collection of keys and values, essentially a Hashtable.
  * The keys are simple Strings whereas the values can be any kind of NSObject.
- *
+ * <p>
  * You can access the keys through the function <code>allKeys()</code>. Access
  * to the objects stored for each key is given through the function
  * <code>objectoForKey(String key)</code>.
@@ -44,7 +38,7 @@ import java.util.Set;
  * @see java.util.Hashtable
  * @see com.dd.plist.NSObject
  */
-public class NSDictionary extends NSObject  implements Map<String, NSObject> {
+public class NSDictionary extends NSObject implements Map<String, NSObject> {
 
     private HashMap<String, NSObject> dict;
 
@@ -78,7 +72,7 @@ public class NSDictionary extends NSObject  implements Map<String, NSObject> {
     }
 
     /*
-	 * (non-Javadoc)
+     * (non-Javadoc)
 	 *
 	 * @see java.util.Map#size()
 	 */
@@ -110,7 +104,7 @@ public class NSDictionary extends NSObject  implements Map<String, NSObject> {
 	 * @see java.util.Map#containsValue(java.lang.Object)
 	 */
     public boolean containsValue(Object value) {
-        if(value == null)
+        if (value == null)
             return false;
         NSObject wrap = NSObject.wrap(value);
         return dict.containsValue(wrap);
@@ -145,12 +139,12 @@ public class NSDictionary extends NSObject  implements Map<String, NSObject> {
      * @param key The key.
      * @param obj The value.
      * @return The value previously associated to the given key,
-     *         or null, if no value was associated to it.
+     * or null, if no value was associated to it.
      */
     public NSObject put(String key, NSObject obj) {
-        if(key == null)
+        if (key == null)
             return null;
-        if(obj == null)
+        if (obj == null)
             return dict.get(key);
         return dict.put(key, obj);
     }
@@ -162,7 +156,7 @@ public class NSDictionary extends NSObject  implements Map<String, NSObject> {
      * @param key The key.
      * @param obj The value. Supported object types are numbers, byte-arrays, dates, strings and arrays or sets of those.
      * @return The value previously associated to the given key,
-     *         or null, if no value was associated to it.
+     * or null, if no value was associated to it.
      */
     public NSObject put(String key, Object obj) {
         return put(key, NSObject.wrap(obj));
@@ -189,6 +183,7 @@ public class NSDictionary extends NSObject  implements Map<String, NSObject> {
 
     /**
      * Removes all key-value pairs from this dictionary.
+     *
      * @see Map#clear()
      */
     public void clear() {

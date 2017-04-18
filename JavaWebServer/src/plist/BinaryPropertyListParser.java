@@ -30,7 +30,7 @@ import java.math.BigInteger;
  * Parses property lists that are in Apple's binary format.
  * Use this class when you are sure about the format of the property list.
  * Otherwise use the PropertyListParser class.
- *
+ * <p>
  * Parsing is done by calling the static <code>parse</code> methods.
  *
  * @author Daniel Dreibrodt
@@ -79,7 +79,7 @@ public class BinaryPropertyListParser {
      *
      * @param data The binary property list's data.
      * @return The root object of the property list. This is usually a NSDictionary but can also be a NSArray.
-     * @throws PropertyListFormatException When the property list's format could not be parsed.
+     * @throws PropertyListFormatException  When the property list's format could not be parsed.
      * @throws UnsupportedEncodingException When a NSString object could not be decoded.
      */
     public static NSObject parse(byte[] data) throws PropertyListFormatException, UnsupportedEncodingException {
@@ -88,11 +88,140 @@ public class BinaryPropertyListParser {
     }
 
     /**
+     * Parses a binary property list from an input stream.
+     *
+     * @param is The input stream that points to the property list's data.
+     * @return The root object of the property list. This is usually a NSDictionary but can also be a NSArray.
+     * @throws PropertyListFormatException When the property list's format could not be parsed.
+     * @throws IOException                 When a NSString object could not be decoded or an InputStream IO error occurs.
+     */
+    public static NSObject parse(InputStream is) throws IOException, PropertyListFormatException {
+        byte[] buf = PropertyListParser.readAll(is);
+        return parse(buf);
+    }
+
+    /**
+     * Parses a binary property list file.
+     *
+     * @param f The binary property list file
+     * @return The root object of the property list. This is usually a NSDictionary but can also be a NSArray.
+     * @throws PropertyListFormatException  When the property list's format could not be parsed.
+     * @throws UnsupportedEncodingException When a NSString object could not be decoded or a file IO error occurs.
+     */
+    public static NSObject parse(File f) throws IOException, PropertyListFormatException {
+        return parse(new FileInputStream(f));
+    }
+
+    /**
+     * Parses an unsigned integers from a byte array.
+     *
+     * @param bytes The byte array containing the unsigned integer.
+     * @return The unsigned integer represented by the given bytes.
+     */
+    @SuppressWarnings("unused")
+    public static long parseUnsignedInt(byte[] bytes) {
+        return parseUnsignedInt(bytes, 0, bytes.length);
+    }
+
+    /**
+     * Parses an unsigned integer from a byte array.
+     *
+     * @param bytes      The byte array containing the unsigned integer.
+     * @param startIndex Beginning of the unsigned int in the byte array.
+     * @param endIndex   End of the unsigned int in the byte array.
+     * @return The unsigned integer represented by the given bytes.
+     */
+    public static long parseUnsignedInt(byte[] bytes, int startIndex, int endIndex) {
+        long l = 0;
+        for (int i = startIndex; i < endIndex; i++) {
+            l <<= 8;
+            l |= bytes[i] & 0xFF;
+        }
+        l &= 0xFFFFFFFFL;
+        return l;
+    }
+
+    /**
+     * Parses a long from a (big-endian) byte array.
+     *
+     * @param bytes The bytes representing the long integer.
+     * @return The long integer represented by the given bytes.
+     */
+    @SuppressWarnings("unused")
+    public static long parseLong(byte[] bytes) {
+        return parseLong(bytes, 0, bytes.length);
+    }
+
+    /**
+     * Parses a long from a (big-endian) byte array.
+     *
+     * @param bytes      The bytes representing the long integer.
+     * @param startIndex Beginning of the long in the byte array.
+     * @param endIndex   End of the long in the byte array.
+     * @return The long integer represented by the given bytes.
+     */
+    public static long parseLong(byte[] bytes, int startIndex, int endIndex) {
+        long l = 0;
+        for (int i = startIndex; i < endIndex; i++) {
+            l <<= 8;
+            l |= bytes[i] & 0xFF;
+        }
+        return l;
+    }
+
+    /**
+     * Parses a double from a (big-endian) byte array.
+     *
+     * @param bytes The bytes representing the double.
+     * @return The double represented by the given bytes.
+     */
+    @SuppressWarnings("unused")
+    public static double parseDouble(byte[] bytes) {
+        return parseDouble(bytes, 0, bytes.length);
+    }
+
+    /**
+     * Parses a double from a (big-endian) byte array.
+     *
+     * @param bytes      The bytes representing the double.
+     * @param startIndex Beginning of the double in the byte array.
+     * @param endIndex   End of the double in the byte array.
+     * @return The double represented by the given bytes.
+     */
+    public static double parseDouble(byte[] bytes, int startIndex, int endIndex) {
+        if (endIndex - startIndex == 8) {
+            return Double.longBitsToDouble(parseLong(bytes, startIndex, endIndex));
+        } else if (endIndex - startIndex == 4) {
+            return Float.intBitsToFloat((int) parseLong(bytes, startIndex, endIndex));
+        } else {
+            throw new IllegalArgumentException("endIndex (" + endIndex + ") - startIndex (" + startIndex + ") != 4 or 8");
+        }
+    }
+
+    /**
+     * Copies a part of a byte array into a new array.
+     *
+     * @param src        The source array.
+     * @param startIndex The index from which to start copying.
+     * @param endIndex   The index until which to copy.
+     * @return The copied array.
+     */
+    public static byte[] copyOfRange(byte[] src, int startIndex, int endIndex) {
+        int length = endIndex - startIndex;
+        if (length < 0) {
+            throw new IllegalArgumentException("startIndex (" + startIndex + ")" + " > endIndex (" + endIndex + ")");
+        }
+        byte[] dest = new byte[length];
+        System.arraycopy(src, startIndex, dest, 0, length);
+        return dest;
+    }
+
+    /**
      * Parses a binary property list from a byte array.
      *
      * @param data The binary property list's data.
      * @return The root object of the property list. This is usually a NSDictionary but can also be a NSArray.
-     * @throws PropertyListFormatException When the property list's format could not be parsed.
+     * @throws PropertyListFormatException  When the property list's format could not be parsed.
      * @throws UnsupportedEncodingException When a NSString object could not be decoded.
      */
     private NSObject doParse(byte[] data) throws PropertyListFormatException, UnsupportedEncodingException {
@@ -142,31 +271,6 @@ public class BinaryPropertyListParser {
     }
 
     /**
-     * Parses a binary property list from an input stream.
-     *
-     * @param is The input stream that points to the property list's data.
-     * @return The root object of the property list. This is usually a NSDictionary but can also be a NSArray.
-     * @throws PropertyListFormatException When the property list's format could not be parsed.
-     * @throws IOException When a NSString object could not be decoded or an InputStream IO error occurs.
-     */
-    public static NSObject parse(InputStream is) throws IOException, PropertyListFormatException {
-        byte[] buf = PropertyListParser.readAll(is);
-        return parse(buf);
-    }
-
-    /**
-     * Parses a binary property list file.
-     *
-     * @param f The binary property list file
-     * @return The root object of the property list. This is usually a NSDictionary but can also be a NSArray.
-     * @throws PropertyListFormatException When the property list's format could not be parsed.
-     * @throws UnsupportedEncodingException When a NSString object could not be decoded or a file IO error occurs.
-     */
-    public static NSObject parse(File f) throws IOException, PropertyListFormatException {
-        return parse(new FileInputStream(f));
-    }
-
-    /**
      * Parses an object inside the currently parsed binary property list.
      * For the format specification check
      * <a href="http://www.opensource.apple.com/source/CF/CF-855.17/CFBinaryPList.c">
@@ -174,7 +278,7 @@ public class BinaryPropertyListParser {
      *
      * @param obj The object ID.
      * @return The parsed object.
-     * @throws PropertyListFormatException When the property list's format could not be parsed.
+     * @throws PropertyListFormatException  When the property list's format could not be parsed.
      * @throws UnsupportedEncodingException When a NSString object could not be decoded.
      */
     private NSObject parseObject(int obj) throws PropertyListFormatException, UnsupportedEncodingException {
@@ -231,7 +335,7 @@ public class BinaryPropertyListParser {
             case 0x3: {
                 //Date
                 if (objInfo != 0x3) {
-                    throw new PropertyListFormatException("The given binary property list contains a date object of an unknown type ("+objInfo+")");
+                    throw new PropertyListFormatException("The given binary property list contains a date object of an unknown type (" + objInfo + ")");
                 }
                 return new NSDate(bytes, offset + 1, offset + 9);
             }
@@ -366,36 +470,33 @@ public class BinaryPropertyListParser {
 
     private int calculateUtf8StringLength(byte[] bytes, int offset, int numCharacters) {
         int length = 0;
-        for(int i = 0; i < numCharacters; i++) {
+        for (int i = 0; i < numCharacters; i++) {
             int tempOffset = offset + length;
-            if(bytes.length <= tempOffset) {
+            if (bytes.length <= tempOffset) {
                 //WARNING: Invalid UTF-8 string, fall back to length = number of characters
                 return numCharacters;
             }
-            if(bytes[tempOffset] < 0x80) {
+            if (bytes[tempOffset] < 0x80) {
                 length++;
             }
-            if(bytes[tempOffset] < 0xC2) {
+            if (bytes[tempOffset] < 0xC2) {
                 //Invalid value (marks continuation byte), fall back to length = number of characters
                 return numCharacters;
-            }
-            else if(bytes[tempOffset] < 0xE0) {
-                if((bytes[tempOffset + 1] & 0xC0) != 0x80) {
+            } else if (bytes[tempOffset] < 0xE0) {
+                if ((bytes[tempOffset + 1] & 0xC0) != 0x80) {
                     //Invalid continuation byte, fall back to length = number of characters
                     return numCharacters;
                 }
                 length += 2;
-            }
-            else if(bytes[tempOffset] < 0xF0) {
-                if((bytes[tempOffset + 1] & 0xC0) != 0x80
+            } else if (bytes[tempOffset] < 0xF0) {
+                if ((bytes[tempOffset + 1] & 0xC0) != 0x80
                         || (bytes[tempOffset + 2] & 0xC0) != 0x80) {
                     //Invalid continuation byte, fall back to length = number of characters
                     return numCharacters;
                 }
                 length += 3;
-            }
-            else if(bytes[tempOffset] < 0xF5) {
-                if((bytes[tempOffset + 1] & 0xC0) != 0x80
+            } else if (bytes[tempOffset] < 0xF5) {
+                if ((bytes[tempOffset + 1] & 0xC0) != 0x80
                         || (bytes[tempOffset + 2] & 0xC0) != 0x80
                         || (bytes[tempOffset + 3] & 0xC0) != 0x80) {
                     //Invalid continuation byte, fall back to length = number of characters
@@ -405,110 +506,6 @@ public class BinaryPropertyListParser {
             }
         }
         return length;
-    }
-
-    /**
-     * Parses an unsigned integers from a byte array.
-     *
-     * @param bytes The byte array containing the unsigned integer.
-     * @return The unsigned integer represented by the given bytes.
-     */
-    @SuppressWarnings("unused")
-    public static long parseUnsignedInt(byte[] bytes) {
-        return parseUnsignedInt(bytes, 0, bytes.length);
-    }
-
-    /**
-     * Parses an unsigned integer from a byte array.
-     *
-     * @param bytes The byte array containing the unsigned integer.
-     * @param startIndex Beginning of the unsigned int in the byte array.
-     * @param endIndex End of the unsigned int in the byte array.
-     * @return The unsigned integer represented by the given bytes.
-     */
-    public static long parseUnsignedInt(byte[] bytes, int startIndex, int endIndex) {
-        long l = 0;
-        for (int i = startIndex; i < endIndex; i++) {
-            l <<= 8;
-            l |= bytes[i] & 0xFF;
-        }
-        l &= 0xFFFFFFFFL;
-        return l;
-    }
-
-    /**
-     * Parses a long from a (big-endian) byte array.
-     *
-     * @param bytes The bytes representing the long integer.
-     * @return The long integer represented by the given bytes.
-     */
-    @SuppressWarnings("unused")
-    public static long parseLong(byte[] bytes) {
-        return parseLong(bytes, 0, bytes.length);
-    }
-
-    /**
-     * Parses a long from a (big-endian) byte array.
-     *
-     * @param bytes The bytes representing the long integer.
-     * @param startIndex Beginning of the long in the byte array.
-     * @param endIndex End of the long in the byte array.
-     * @return The long integer represented by the given bytes.
-     */
-    public static long parseLong(byte[] bytes, int startIndex, int endIndex) {
-        long l = 0;
-        for (int i = startIndex; i < endIndex; i++) {
-            l <<= 8;
-            l |= bytes[i] & 0xFF;
-        }
-        return l;
-    }
-
-    /**
-     * Parses a double from a (big-endian) byte array.
-     *
-     * @param bytes The bytes representing the double.
-     * @return The double represented by the given bytes.
-     */
-    @SuppressWarnings("unused")
-    public static double parseDouble(byte[] bytes) {
-        return parseDouble(bytes, 0, bytes.length);
-    }
-
-    /**
-     * Parses a double from a (big-endian) byte array.
-     *
-     * @param bytes The bytes representing the double.
-     * @param startIndex Beginning of the double in the byte array.
-     * @param endIndex End of the double in the byte array.
-     * @return The double represented by the given bytes.
-     */
-    public static double parseDouble(byte[] bytes, int startIndex, int endIndex) {
-        if (endIndex - startIndex == 8) {
-            return Double.longBitsToDouble(parseLong(bytes, startIndex, endIndex));
-        } else if (endIndex - startIndex == 4) {
-            return Float.intBitsToFloat((int)parseLong(bytes, startIndex, endIndex));
-        } else {
-            throw new IllegalArgumentException("endIndex ("+endIndex+") - startIndex ("+startIndex+") != 4 or 8");
-        }
-    }
-
-    /**
-     * Copies a part of a byte array into a new array.
-     *
-     * @param src        The source array.
-     * @param startIndex The index from which to start copying.
-     * @param endIndex   The index until which to copy.
-     * @return The copied array.
-     */
-    public static byte[] copyOfRange(byte[] src, int startIndex, int endIndex) {
-        int length = endIndex - startIndex;
-        if (length < 0) {
-            throw new IllegalArgumentException("startIndex (" + startIndex + ")" + " > endIndex (" + endIndex + ")");
-        }
-        byte[] dest = new byte[length];
-        System.arraycopy(src, startIndex, dest, 0, length);
-        return dest;
     }
 }
 

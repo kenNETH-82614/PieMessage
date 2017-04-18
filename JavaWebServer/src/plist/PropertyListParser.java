@@ -25,20 +25,13 @@ package plist;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.text.ParseException;
 
 /**
  * This class provides methods to parse property lists. It can handle files,
  * input streams and byte arrays. All known property list formats are supported.
- *
+ * <p>
  * This class also provides methods to save and convert property lists.
  *
  * @author Daniel Dreibrodt
@@ -62,21 +55,22 @@ public class PropertyListParser {
 
     /**
      * Determines the type of a property list by means of the first bytes of its data
+     *
      * @param dataBeginning The very first bytes of data of the property list (minus any whitespace) as a string
      * @return The type of the property list
      */
     private static int determineType(String dataBeginning) {
         dataBeginning = dataBeginning.trim();
-        if(dataBeginning.length() == 0) {
+        if (dataBeginning.length() == 0) {
             return TYPE_ERROR_BLANK;
         }
-        if(dataBeginning.startsWith("bplist")) {
+        if (dataBeginning.startsWith("bplist")) {
             return TYPE_BINARY;
         }
-        if(dataBeginning.startsWith("(") || dataBeginning.startsWith("{") || dataBeginning.startsWith("/")) {
+        if (dataBeginning.startsWith("(") || dataBeginning.startsWith("{") || dataBeginning.startsWith("/")) {
             return TYPE_ASCII;
         }
-        if(dataBeginning.startsWith("<")) {
+        if (dataBeginning.startsWith("<")) {
             return TYPE_XML;
         }
         return TYPE_ERROR_UNKNOWN;
@@ -84,17 +78,18 @@ public class PropertyListParser {
 
     /**
      * Determines the type of a property list by means of the first bytes of its data
+     *
      * @param bytes The very first bytes of data of the property list (minus any whitespace)
      * @return The type of the property list
      */
     private static int determineType(byte[] bytes) {
         //Skip any possible whitespace at the beginning of the file
         int offset = 0;
-        if(bytes.length >= 3 && (bytes[0] & 0xFF) == 0xEF && (bytes[1] & 0xFF) == 0xBB && (bytes[2] & 0xFF) == 0xBF) {
+        if (bytes.length >= 3 && (bytes[0] & 0xFF) == 0xEF && (bytes[1] & 0xFF) == 0xBB && (bytes[2] & 0xFF) == 0xBF) {
             //Skip Unicode byte order mark (BOM)
             offset += 3;
         }
-        while(offset < bytes.length && bytes[offset] == ' ' || bytes[offset] == '\t' || bytes[offset] == '\r' || bytes[offset] == '\n' || bytes[offset] == '\f') {
+        while (offset < bytes.length && bytes[offset] == ' ' || bytes[offset] == '\t' || bytes[offset] == '\r' || bytes[offset] == '\n' || bytes[offset] == '\f') {
             offset++;
         }
         return determineType(new String(bytes, offset, Math.min(8, bytes.length - offset)));
@@ -102,6 +97,7 @@ public class PropertyListParser {
 
     /**
      * Determines the type of a property list by means of the first bytes of its data
+     *
      * @param is An input stream pointing to the beginning of the property list data.
      *           If the stream supports marking it will be reset to the beginning of the property
      *           list data after the type has been determined.
@@ -114,18 +110,18 @@ public class PropertyListParser {
         long index = -1;
         boolean bom = false;
         do {
-            if(is.markSupported())
+            if (is.markSupported())
                 is.mark(16);
             b = is.read();
             index++;
             //Check if we are reading the Unicode byte order mark (BOM) and skip it
             bom = index < 3 && ((index == 0 && b == 0xEF) || (bom && ((index == 1 && b == 0xBB) || (index == 2 && b == 0xBF))));
         }
-        while(b != -1 && b == ' ' || b == '\t' || b == '\r' || b == '\n' || b == '\f' || bom);
-        magicBytes[0] = (byte)b;
+        while (b != -1 && b == ' ' || b == '\t' || b == '\r' || b == '\n' || b == '\f' || bom);
+        magicBytes[0] = (byte) b;
         int read = is.read(magicBytes, 1, 7);
         int type = determineType(new String(magicBytes, 0, read));
-        if(is.markSupported())
+        if (is.markSupported())
             is.reset();
         return type;
     }
@@ -134,7 +130,7 @@ public class PropertyListParser {
      * Reads all bytes from an InputStream and stores them in an array, up to
      * a maximum count.
      *
-     * @param in  The InputStream pointing to the data that should be stored in the array.
+     * @param in The InputStream pointing to the data that should be stored in the array.
      * @return An array containing all bytes that were read from the input stream.
      * @throws IOException When an IO error while reading from the input stream.
      */
@@ -153,12 +149,12 @@ public class PropertyListParser {
      *
      * @param filePath Path to the property list file.
      * @return The root object in the property list. This is usually a NSDictionary but can also be a NSArray.
-     * @throws ParserConfigurationException If a document builder for parsing a XML property list
-     *                                                        could not be created. This should not occur.
-     * @throws IOException If any IO error occurs while reading the file.
-     * @throws SAXException If any parse error occurs.
+     * @throws ParserConfigurationException             If a document builder for parsing a XML property list
+     *                                                  could not be created. This should not occur.
+     * @throws IOException                              If any IO error occurs while reading the file.
+     * @throws SAXException                             If any parse error occurs.
      * @throws com.dd.plist.PropertyListFormatException If the given property list has an invalid format.
-     * @throws ParseException If a date string could not be parsed.
+     * @throws ParseException                           If a date string could not be parsed.
      */
     public static NSObject parse(String filePath) throws ParserConfigurationException, ParseException, SAXException, PropertyListFormatException, IOException {
         return parse(new File(filePath));
@@ -169,18 +165,18 @@ public class PropertyListParser {
      *
      * @param f The property list file.
      * @return The root object in the property list. This is usually a NSDictionary but can also be a NSArray.
-     * @throws ParserConfigurationException If a document builder for parsing a XML property list
-     *                                                        could not be created. This should not occur.
-     * @throws IOException If any IO error occurs while reading the file.
-     * @throws SAXException If any parse error occurs.
+     * @throws ParserConfigurationException             If a document builder for parsing a XML property list
+     *                                                  could not be created. This should not occur.
+     * @throws IOException                              If any IO error occurs while reading the file.
+     * @throws SAXException                             If any parse error occurs.
      * @throws com.dd.plist.PropertyListFormatException If the given property list has an invalid format.
-     * @throws ParseException If a date string could not be parsed.
+     * @throws ParseException                           If a date string could not be parsed.
      */
     public static NSObject parse(File f) throws IOException, PropertyListFormatException, ParseException, ParserConfigurationException, SAXException {
         FileInputStream fis = new FileInputStream(f);
         int type = determineType(fis);
         fis.close();
-        switch(type) {
+        switch (type) {
             case TYPE_BINARY:
                 return BinaryPropertyListParser.parse(f);
             case TYPE_XML:
@@ -197,15 +193,15 @@ public class PropertyListParser {
      *
      * @param bytes The property list data as a byte array.
      * @return The root object in the property list. This is usually a NSDictionary but can also be a NSArray.
-     * @throws ParserConfigurationException If a document builder for parsing a XML property list
-     *                                                        could not be created. This should not occur.
-     * @throws IOException If any IO error occurs while reading the byte array.
-     * @throws SAXException If any parse error occurs.
+     * @throws ParserConfigurationException             If a document builder for parsing a XML property list
+     *                                                  could not be created. This should not occur.
+     * @throws IOException                              If any IO error occurs while reading the byte array.
+     * @throws SAXException                             If any parse error occurs.
      * @throws com.dd.plist.PropertyListFormatException If the given property list has an invalid format.
-     * @throws ParseException If a date string could not be parsed.
+     * @throws ParseException                           If a date string could not be parsed.
      */
     public static NSObject parse(byte[] bytes) throws IOException, PropertyListFormatException, ParseException, ParserConfigurationException, SAXException {
-        switch(determineType(bytes)) {
+        switch (determineType(bytes)) {
             case TYPE_BINARY:
                 return BinaryPropertyListParser.parse(bytes);
             case TYPE_XML:
@@ -222,12 +218,12 @@ public class PropertyListParser {
      *
      * @param is The InputStream delivering the property list data.
      * @return The root object of the property list. This is usually a NSDictionary but can also be a NSArray.
-     * @throws ParserConfigurationException If a document builder for parsing a XML property list
-     *                                                        could not be created. This should not occur.
-     * @throws IOException If any IO error occurs while reading the input stream.
-     * @throws SAXException If any parse error occurs.
+     * @throws ParserConfigurationException             If a document builder for parsing a XML property list
+     *                                                  could not be created. This should not occur.
+     * @throws IOException                              If any IO error occurs while reading the input stream.
+     * @throws SAXException                             If any parse error occurs.
      * @throws com.dd.plist.PropertyListFormatException If the given property list has an invalid format.
-     * @throws ParseException If a date string could not be parsed.
+     * @throws ParseException                           If a date string could not be parsed.
      */
     public static NSObject parse(InputStream is) throws IOException, PropertyListFormatException, ParseException, ParserConfigurationException, SAXException {
         return parse(readAll(is));
@@ -243,7 +239,7 @@ public class PropertyListParser {
     public static void saveAsXML(NSObject root, File out) throws IOException {
         File parent = out.getParentFile();
         if (!parent.exists())
-            if(!parent.mkdirs())
+            if (!parent.mkdirs())
                 throw new IOException("The output directory does not exist and could not be created.");
         FileOutputStream fous = new FileOutputStream(out);
         saveAsXML(root, fous);
@@ -268,13 +264,12 @@ public class PropertyListParser {
      *
      * @param in  The source file.
      * @param out The target file.
-     *
-     * @throws ParserConfigurationException If a document builder for parsing a XML property list
-     *                                                        could not be created. This should not occur.
-     * @throws IOException If any IO error occurs while reading the input file or writing the output file.
-     * @throws SAXException If any parse error occurs.
+     * @throws ParserConfigurationException             If a document builder for parsing a XML property list
+     *                                                  could not be created. This should not occur.
+     * @throws IOException                              If any IO error occurs while reading the input file or writing the output file.
+     * @throws SAXException                             If any parse error occurs.
      * @throws com.dd.plist.PropertyListFormatException If the given property list has an invalid format.
-     * @throws ParseException If a date string could not be parsed.
+     * @throws ParseException                           If a date string could not be parsed.
      */
     public static void convertToXml(File in, File out) throws ParserConfigurationException, ParseException, SAXException, PropertyListFormatException, IOException {
         NSObject root = parse(in);
@@ -291,7 +286,7 @@ public class PropertyListParser {
     public static void saveAsBinary(NSObject root, File out) throws IOException {
         File parent = out.getParentFile();
         if (!parent.exists())
-            if(!parent.mkdirs())
+            if (!parent.mkdirs())
                 throw new IOException("The output directory does not exist and could not be created.");
         BinaryPropertyListWriter.write(out, root);
     }
@@ -312,12 +307,12 @@ public class PropertyListParser {
      *
      * @param in  The source file.
      * @param out The target file.
-     * @throws ParserConfigurationException If a document builder for parsing a XML property list
-     *                                                        could not be created. This should not occur.
-     * @throws IOException If any IO error occurs while reading the input file or writing the output file.
-     * @throws SAXException If any parse error occurs.
+     * @throws ParserConfigurationException             If a document builder for parsing a XML property list
+     *                                                  could not be created. This should not occur.
+     * @throws IOException                              If any IO error occurs while reading the input file or writing the output file.
+     * @throws SAXException                             If any parse error occurs.
      * @throws com.dd.plist.PropertyListFormatException If the given property list has an invalid format.
-     * @throws ParseException If a date string could not be parsed.
+     * @throws ParseException                           If a date string could not be parsed.
      */
     public static void convertToBinary(File in, File out) throws IOException, ParserConfigurationException, ParseException, SAXException, PropertyListFormatException {
         NSObject root = parse(in);
@@ -334,7 +329,7 @@ public class PropertyListParser {
     public static void saveAsASCII(NSDictionary root, File out) throws IOException {
         File parent = out.getParentFile();
         if (!parent.exists())
-            if(!parent.mkdirs())
+            if (!parent.mkdirs())
                 throw new IOException("The output directory does not exist and could not be created.");
         OutputStreamWriter w = new OutputStreamWriter(new FileOutputStream(out), "ASCII");
         w.write(root.toASCIIPropertyList());
@@ -359,22 +354,20 @@ public class PropertyListParser {
      *
      * @param in  The source file.
      * @param out The target file.
-     * @throws ParserConfigurationException If a document builder for parsing a XML property list
-     *                                                        could not be created. This should not occur.
-     * @throws IOException If any IO error occurs while reading the input file or writing the output file.
-     * @throws SAXException If any parse error occurs.
+     * @throws ParserConfigurationException             If a document builder for parsing a XML property list
+     *                                                  could not be created. This should not occur.
+     * @throws IOException                              If any IO error occurs while reading the input file or writing the output file.
+     * @throws SAXException                             If any parse error occurs.
      * @throws com.dd.plist.PropertyListFormatException If the given property list has an invalid format.
-     * @throws ParseException If a date string could not be parsed.
+     * @throws ParseException                           If a date string could not be parsed.
      */
     public static void convertToASCII(File in, File out) throws ParserConfigurationException, ParseException, SAXException, PropertyListFormatException, IOException {
         NSObject root = parse(in);
-        if(root instanceof NSDictionary) {
+        if (root instanceof NSDictionary) {
             saveAsASCII((NSDictionary) root, out);
-        }
-        else if(root instanceof NSArray) {
+        } else if (root instanceof NSArray) {
             saveAsASCII((NSArray) root, out);
-        }
-        else {
+        } else {
             throw new PropertyListFormatException("The root of the given input property list "
                     + "is neither a Dictionary nor an Array!");
         }
@@ -390,7 +383,7 @@ public class PropertyListParser {
     public static void saveAsGnuStepASCII(NSDictionary root, File out) throws IOException {
         File parent = out.getParentFile();
         if (!parent.exists())
-            if(!parent.mkdirs())
+            if (!parent.mkdirs())
                 throw new IOException("The output directory does not exist and could not be created.");
         OutputStreamWriter w = new OutputStreamWriter(new FileOutputStream(out), "ASCII");
         w.write(root.toGnuStepASCIIPropertyList());
@@ -407,7 +400,7 @@ public class PropertyListParser {
     public static void saveAsGnuStepASCII(NSArray root, File out) throws IOException {
         File parent = out.getParentFile();
         if (!parent.exists())
-            if(!parent.mkdirs())
+            if (!parent.mkdirs())
                 throw new IOException("The output directory does not exist and could not be created.");
         OutputStreamWriter w = new OutputStreamWriter(new FileOutputStream(out), "ASCII");
         w.write(root.toGnuStepASCIIPropertyList());
@@ -419,22 +412,20 @@ public class PropertyListParser {
      *
      * @param in  The source file.
      * @param out The target file.
-     * @throws ParserConfigurationException If a document builder for parsing a XML property list
-     *                                                        could not be created. This should not occur.
-     * @throws IOException If any IO error occurs while reading the input file or writing the output file.
-     * @throws SAXException If any parse error occurs.
+     * @throws ParserConfigurationException             If a document builder for parsing a XML property list
+     *                                                  could not be created. This should not occur.
+     * @throws IOException                              If any IO error occurs while reading the input file or writing the output file.
+     * @throws SAXException                             If any parse error occurs.
      * @throws com.dd.plist.PropertyListFormatException If the given property list has an invalid format.
-     * @throws ParseException If a date string could not be parsed.
+     * @throws ParseException                           If a date string could not be parsed.
      */
     public static void convertToGnuStepASCII(File in, File out) throws ParserConfigurationException, ParseException, SAXException, PropertyListFormatException, IOException {
         NSObject root = parse(in);
-        if(root instanceof NSDictionary) {
+        if (root instanceof NSDictionary) {
             saveAsGnuStepASCII((NSDictionary) root, out);
-        }
-        else if(root instanceof NSArray) {
+        } else if (root instanceof NSArray) {
             saveAsGnuStepASCII((NSArray) root, out);
-        }
-        else {
+        } else {
             throw new PropertyListFormatException("The root of the given input property list "
                     + "is neither a Dictionary nor an Array!");
         }

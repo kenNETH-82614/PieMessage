@@ -1,21 +1,21 @@
 package com.ericchee.bboyairwreck.piemessage;
 
 import android.app.Application;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
+import java.io.IOException;
 import java.util.TreeMap;
 
 /**
  * Created by eric on 11/27/15.
  */
 public class PieMessageApplication extends Application {
-    public final static String TAG = PieMessageApplication.class.getSimpleName();
+    private final static String TAG = PieMessageApplication.class.getSimpleName();
     private static PieMessageApplication instance;
-    private PieSQLiteOpenHelper dbHelper;
-    private TreeMap<Long, Chat> chatsMap;  //  chat.ROWID, Chat
+    private ServerBridge serverBridge = null;
+    private TreeMap<String, Chat> chats;  //  chatId, chat
 
     public PieMessageApplication() {
         if (instance == null) {
@@ -25,7 +25,7 @@ public class PieMessageApplication extends Application {
         }
     }
 
-    public static PieMessageApplication getInstance() {
+    static PieMessageApplication getInstance() {
         return instance;
     }
 
@@ -35,29 +35,78 @@ public class PieMessageApplication extends Application {
 
         Log.i(TAG, "PieMessageApp is loaded and running");
 
-//        getApplicationContext().deleteDatabase(PieSQLiteOpenHelper.DATABASE_NAME);
+        chats = new TreeMap<>();
 
-        dbHelper = new PieSQLiteOpenHelper(getApplicationContext());
-        chatsMap = new TreeMap<>();
-        dbHelper.getAllChats();
+        startServerBridge();
+    }
 
+    void startServerBridge() {
+        if (serverBridge != null) {
+            Log.i(TAG, "Stopping server bridge");
+            serverBridge.stop();
+        }
+        Log.i(TAG, "Starting server bridge");
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-
         if (sharedPreferences.contains(getString(R.string.pref_socket_address_key))) {
-            startReceieveMessagesService();
+            try {
+                serverBridge = new ServerBridge();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
-    public void startReceieveMessagesService() {
-        Intent receiveService = new Intent(this, ReceiveMessagesService.class);
-        startService(receiveService);
+    ServerBridge getServerBridge() {
+        return serverBridge;
     }
 
-    public PieSQLiteOpenHelper getDbHelper() {
-        return dbHelper;
+    synchronized TreeMap<String, Chat> getChats() {
+        return chats;
     }
 
-    public TreeMap<Long, Chat> getChatsMap() {
-        return chatsMap;
+    void addMessage(Message message) {
+        if (!getChats().containsKey(message.getChatId())) {
+            getChats().put(message.getChatId(), new Chat(message.getChatId(), message.getChatName()));
+        }
+        message.getChat().addMessage(message.getId(), message);
+    }
+
+    void removeMessage(Message oldMessage) {
+        if (getChats().containsKey(oldMessage.getChatId())) {
+            oldMessage.getChat().removeMessage(oldMessage.getId());
+            if (oldMessage.getChat().getMessages().isEmpty()) {
+                getChats().remove(oldMessage.getChatId());
+            }
+        }
+    }
+
+    SocketInfo getSocket() throws IOException {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        String socketAddress = sharedPreferences.getString(this.getString(R.string.pref_socket_address_key), "127.0.0.1");
+        int port = 5000;
+        if (socketAddress.contains(":")) {
+            port = Integer.parseInt(socketAddress.split(":")[1]);
+            socketAddress = socketAddress.split(":")[0];
+        }
+        Log.i(TAG, socketAddress + ":" + port);
+        return new SocketInfo(socketAddress, port);
+    }
+
+    class SocketInfo {
+        private String socketAddress;
+        private int port;
+
+        SocketInfo(String socketAddress, int port) {
+            this.socketAddress = socketAddress;
+            this.port = port;
+        }
+
+        String getSocketAddress() {
+            return socketAddress;
+        }
+
+        int getPort() {
+            return port;
+        }
     }
 }

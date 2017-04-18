@@ -5,9 +5,9 @@ package com.ericchee.bboyairwreck.piemessage;
  */
 public enum MessageStatus {
 
-    SUCCESSFUL (0),
-    UNSUCCESSFUL (1),
-    IN_PROGRESS (3);
+    UNSUCCESSFUL(0),
+    SUCCESSFUL(1),
+    IN_PROGRESS(3);
 
     private int messageNum;
 

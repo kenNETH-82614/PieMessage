@@ -22,6 +22,7 @@ public class Server {
     HashSet<ClientThread> setOfMobileIncomingThreads;
     HashSet<ClientThread> setOfOSXOutgoingThreads;
     HashSet<ClientThread> setOfOSXIncomingThreads;
+    HashSet<JSONObject> setOfMissedMessages;
 
     public Server(int port) {
         if (instance == null) {
@@ -32,11 +33,12 @@ public class Server {
                 System.out.println("Server started at: " + new Date());
                 setOfMobileOutgoingThreads = new HashSet<ClientThread>();
                 setOfMobileIncomingThreads = new HashSet<ClientThread>();
-                setOfOSXOutgoingThreads =  new HashSet<ClientThread>();
-                setOfOSXIncomingThreads =  new HashSet<ClientThread>();
+                setOfOSXOutgoingThreads = new HashSet<ClientThread>();
+                setOfOSXIncomingThreads = new HashSet<ClientThread>();
+                setOfMissedMessages = new HashSet<JSONObject>();
 
                 // loop that runs server functions
-                while(true) {
+                while (true) {
                     // Wait for a client to connect
                     Socket socket = sSocket.accept();
 
@@ -178,23 +180,34 @@ public class Server {
     }
 
     public void notifyMobileIncomingThreads(JSONObject jsonObject) {
-        ArrayList<ClientThread> removeList = new ArrayList<ClientThread>();
-
-        for (ClientThread mobileThread : setOfMobileIncomingThreads) {
-            if (mobileThread.thread.isAlive()) {
-                System.out.println("Mobile incoming thread is alive, sending msg to client");
-                mobileThread.output.println(jsonObject.toString());
-            } else {
-                System.out.println("Mobile incoming thread is dead");
-                removeList.add(mobileThread);
+        if (setOfMobileIncomingThreads.isEmpty()) {
+            setOfMissedMessages.add(jsonObject);
+        } else {
+            if (!setOfMissedMessages.isEmpty()) {
+                HashSet<JSONObject> tempSetOfMissedMessages = setOfMissedMessages;
+                setOfMissedMessages = new HashSet<JSONObject>();
+                for (JSONObject jObj : tempSetOfMissedMessages) {
+                    notifyMobileIncomingThreads(jObj);
+                }
             }
-        }
+            ArrayList<ClientThread> removeList = new ArrayList<ClientThread>();
 
-        for (ClientThread clientThread : removeList) {
-            this.setOfMobileOutgoingThreads.remove(clientThread);
-        }
+            for (ClientThread mobileThread : setOfMobileIncomingThreads) {
+                if (mobileThread.thread.isAlive()) {
+                    System.out.println("Mobile incoming thread is alive, sending msg to client");
+                    mobileThread.output.println(jsonObject.toString());
+                } else {
+                    System.out.println("Mobile incoming thread is dead");
+                    removeList.add(mobileThread);
+                }
+            }
 
-        System.out.println("Finished notifying of incoming messages");
+            for (ClientThread clientThread : removeList) {
+                this.setOfMobileIncomingThreads.remove(clientThread);
+            }
+
+            System.out.println("Finished notifying of incoming messages");
+        }
     }
 
 }

@@ -1,18 +1,18 @@
 /**
  * plist - An open source library to parse and generate property lists
- *
+ * <p>
  * Copyright (C) 2012 Daniel Dreibrodt
- *
+ * <p>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * <p>
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * <p>
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,34 +26,34 @@ package plist;
 /**
  * <p>Encodes and decodes to and from Base64 notation.</p>
  * <p>Homepage: <a href="http://iharder.net/base64">http://iharder.net/base64</a>.</p>
- * 
+ *
  * <p>Example:</p>
  *
  * <code>String encoded = Base64.encode( myByteArray );</code>
  *
  * <code>byte[] myByteArray = Base64.decode( encoded );</code>
- * 
+ *
  * <p>The <tt>options</tt> parameter, which appears in a few places, is used to pass
  * several pieces of information to the encoder. In the "higher level" methods such as
  * encodeBytes( bytes, options ) the options parameter can be used to indicate such
  * things as first gzipping the bytes before encoding them, not inserting linefeeds,
  * and encoding using the URL-safe and Ordered dialects.</p>
- * 
+ *
  * <p>Note, according to <a href="http://www.faqs.org/rfcs/rfc3548.html">RFC3548</a>,
  * Section 2.1, implementations should not add line feeds unless explicitly told
  * to do so. I've got Base64 set to this behavior now, although earlier versions
  * broke lines by default.</p>
- * 
+ *
  * <p>The constants defined in Base64 can be OR-ed together to combine options, so you
  * might make a call like this:</p>
- * 
+ *
  * <code>String encoded = Base64.encodeBytes( mybytes, Base64.GZIP | Base64.DO_BREAK_LINES );</code>
  * <p>to compress the data before encoding it and then making the output have newline characters.</p>
  * <p>Also...</p>
  * <code>String encoded = Base64.encodeBytes( crazyString.getBytes() );</code>
- * 
- * 
- * 
+ *
+ *
+ *
  * <p>
  * Change Log:
  * </p>
@@ -130,7 +130,7 @@ package plist;
  * Special thanks to Jim Kellerman at <a href="http://www.powerset.com/">http://www.powerset.com/</a>
  * for contributing the new Base64 dialects.
  * </li>
- * 
+ *
  * <li>v2.1 - Cleaned up javadoc comments and unused variables and methods. Added
  * some convenience methods for reading and writing to and from files.</li>
  * <li>v2.0.2 - Now specifies UTF-8 encoding in places where the code fails on systems
@@ -448,6 +448,12 @@ public class Base64 {
 
 
     /**
+     * Defeats instantiation.
+     */
+    private Base64() {
+    }
+
+    /**
      * Returns one of the _SOMETHING_ALPHABET byte arrays depending on
      * the options specified.
      * It's possible, though silly, to specify ORDERED <b>and</b> URLSAFE
@@ -463,7 +469,6 @@ public class Base64 {
             return _STANDARD_ALPHABET;
         }
     }    // end getAlphabet
-
 
     /**
      * Returns one of the _SOMETHING_DECODABET byte arrays depending on
@@ -483,17 +488,9 @@ public class Base64 {
     }    // end getAlphabet
 
 
-    /**
-     * Defeats instantiation.
-     */
-    private Base64() {
-    }
-
-
 
 
 /* ********  E N C O D I N G   M E T H O D S  ******** */
-
 
     /**
      * Encodes up to the first three bytes of array <var>threeBytes</var>
@@ -641,13 +638,13 @@ public class Base64 {
     /**
      * Serializes an object and returns the Base64-encoded
      * version of that serialized object.
-     * 
+     *
      * <p>As of v 2.3, if the object
      * cannot be serialized or there is another error,
      * the method will throw an java.io.IOException. <b>This is new to v2.3!</b>
      * In earlier versions, it just returned a null value, but
      * in retrospect that's a pretty poor way to handle it.</p>
-     * 
+     *
      * The object is not GZip-compressed before being encoded.
      *
      * @param serializableObject The object to encode
@@ -665,22 +662,22 @@ public class Base64 {
     /**
      * Serializes an object and returns the Base64-encoded
      * version of that serialized object.
-     * 
+     *
      * <p>As of v 2.3, if the object
      * cannot be serialized or there is another error,
      * the method will throw an java.io.IOException. <b>This is new to v2.3!</b>
      * In earlier versions, it just returned a null value, but
      * in retrospect that's a pretty poor way to handle it.</p>
-     * 
+     *
      * The object is not GZip-compressed before being encoded.
-     * 
+     *
      * Example options:<pre>
      *   GZIP: gzip-compresses object before encoding it.
      *   DO_BREAK_LINES: break lines at 76 characters
      * </pre>
-     * 
+     *
      * Example: <code>encodeObject( myObj, Base64.GZIP )</code> or
-     * 
+     *
      * Example: <code>encodeObject( myObj, Base64.GZIP | Base64.DO_BREAK_LINES )</code>
      *
      * @param serializableObject The object to encode
@@ -791,8 +788,8 @@ public class Base64 {
      * Example: <code>encodeBytes( myData, Base64.GZIP )</code> or
      * <p>
      * Example: <code>encodeBytes( myData, Base64.GZIP | Base64.DO_BREAK_LINES )</code>
-     * 
-     * 
+     *
+     *
      * <p>As of v 2.3, if there is an error with the GZIP stream,
      * the method will throw an java.io.IOException. <b>This is new to v2.3!</b>
      * In earlier versions, it just returned a null value, but
@@ -815,7 +812,7 @@ public class Base64 {
     /**
      * Encodes a byte array into Base64 notation.
      * Does not GZip-compress data.
-     * 
+     *
      * <p>As of v 2.3, if there is an error,
      * the method will throw an java.io.IOException. <b>This is new to v2.3!</b>
      * In earlier versions, it just returned a null value, but
@@ -856,8 +853,8 @@ public class Base64 {
      * Example: <code>encodeBytes( myData, Base64.GZIP )</code> or
      * <p>
      * Example: <code>encodeBytes( myData, Base64.GZIP | Base64.DO_BREAK_LINES )</code>
-     * 
-     * 
+     *
+     *
      * <p>As of v 2.3, if there is an error with the GZIP stream,
      * the method will throw an java.io.IOException. <b>This is new to v2.3!</b>
      * In earlier versions, it just returned a null value, but
@@ -1446,7 +1443,7 @@ public class Base64 {
 
     /**
      * Convenience method for encoding data to a file.
-     * 
+     *
      * <p>As of v 2.3, if there is a error,
      * the method will throw an java.io.IOException. <b>This is new to v2.3!</b>
      * In earlier versions, it just returned false, but
@@ -1486,7 +1483,7 @@ public class Base64 {
 
     /**
      * Convenience method for decoding data to a file.
-     * 
+     *
      * <p>As of v 2.3, if there is a error,
      * the method will throw an java.io.IOException. <b>This is new to v2.3!</b>
      * In earlier versions, it just returned false, but
@@ -1522,7 +1519,7 @@ public class Base64 {
     /**
      * Convenience method for reading a base64-encoded
      * file and decoding it.
-     * 
+     *
      * <p>As of v 2.3, if there is a error,
      * the method will throw an java.io.IOException. <b>This is new to v2.3!</b>
      * In earlier versions, it just returned false, but
@@ -1583,7 +1580,7 @@ public class Base64 {
     /**
      * Convenience method for reading a binary file
      * and base64-encoding it.
-     * 
+     *
      * <p>As of v 2.3, if there is a error,
      * the method will throw an java.io.IOException. <b>This is new to v2.3!</b>
      * In earlier versions, it just returned false, but
@@ -1731,13 +1728,13 @@ public class Base64 {
         /**
          * Constructs a {@link com.dd.plist.Base64.B64InputStream} in
          * either ENCODE or DECODE mode.
-         * 
+         *
          * Valid options:<pre>
          *   ENCODE or DECODE: Encode or Decode as data is read.
          *   DO_BREAK_LINES: break lines at 76 characters
          *     (only meaningful when encoding)
          * </pre>
-         * 
+         *
          * Example: <code>new Base64.B64InputStream( in, Base64.DECODE )</code>
          *
          * @param in      the <tt>java.io.InputStream</tt> from which to read data.
@@ -1942,13 +1939,13 @@ public class Base64 {
         /**
          * Constructs a {@link com.dd.plist.Base64.B64OutputStream} in
          * either ENCODE or DECODE mode.
-         * 
+         *
          * Valid options:<pre>
          *   ENCODE or DECODE: Encode or Decode as data is read.
          *   DO_BREAK_LINES: don't break lines at 76 characters
          *     (only meaningful when encoding)
          * </pre>
-         * 
+         *
          * Example: <code>new Base64.B64OutputStream( out, Base64.ENCODE )</code>
          *
          * @param out     the <tt>java.io.B64OutputStream</tt> to which data will be written.

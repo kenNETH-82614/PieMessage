@@ -15,9 +15,9 @@ import java.util.ArrayList;
  * Created by eric on 11/13/15.
  */
 public class MessagesAdapter extends ArrayAdapter<Message> {
-    public static final String TAG = MessagesAdapter.class.getSimpleName();
+    private static final String TAG = MessagesAdapter.class.getSimpleName();
 
-    public MessagesAdapter(Context context, ArrayList<Message> messages) {
+    MessagesAdapter(Context context, ArrayList<Message> messages) {
         super(context, 0, messages);
     }
 
@@ -28,14 +28,18 @@ public class MessagesAdapter extends ArrayAdapter<Message> {
         // Get data item from this postion
         Message message = getItem(position);
 
-        View messageTypeContainer = null;
+        View messageTypeContainer;
 
         // Check if existing view is being reused, otherwise inflate the view
         if (convertView == null) {
             convertView = LayoutInflater.from(getContext()).inflate(R.layout.item_message, parent, false);
         }
 
-        if (message.messageType == MessageType.RECEIVED) {
+        if (message.getChatName().equals(message.getSender())) {
+            convertView.findViewById(R.id.tvSender).setVisibility(View.GONE);
+        }
+
+        if (message.getMessageType() == MessageType.RECEIVED) {
             messageTypeContainer = convertView.findViewById(R.id.llItemMessageReceived);
             convertView.findViewById(R.id.llItemMessageReceived).setVisibility(View.VISIBLE);
             convertView.findViewById(R.id.llItemMessageSent).setVisibility(View.GONE);
@@ -48,13 +52,13 @@ public class MessagesAdapter extends ArrayAdapter<Message> {
         // Find views to populate data in the subviews
         TextView tvMessage = (TextView) messageTypeContainer.findViewById(R.id.tvMessage);
 
-        tvMessage.setText(message.text);
+        tvMessage.setText(message.getMsg());
 
-        if (message.messageType != MessageType.RECEIVED) {
+        if (message.getMessageType() != MessageType.RECEIVED) {
             Drawable tvMessageBackground = tvMessage.getBackground();
-            switch (message.messageStatus) {
+            switch (message.getMessageStatus()) {
                 case SUCCESSFUL:
-                    tvMessageBackground = messageTypeContainer.getResources().getDrawable(R.drawable.round_rectangle_pink);  // TODO getDrawable(id, Theme) for lollipop
+                    tvMessageBackground = messageTypeContainer.getResources().getDrawable(R.drawable.round_rectangle_blue);  // TODO getDrawable(id, Theme) for lollipop
                     break;
                 case UNSUCCESSFUL:
                     tvMessageBackground = messageTypeContainer.getResources().getDrawable(R.drawable.round_rectangle_aquamarine);  // TODO getDrawable(id, Theme) for lollipop
@@ -66,8 +70,8 @@ public class MessagesAdapter extends ArrayAdapter<Message> {
 
             tvMessage.setBackground(tvMessageBackground);
         } else {
-            TextView tvHandleID = (TextView) messageTypeContainer.findViewById(R.id.tvHandleID);
-            tvHandleID.setText(message.handleID);
+            TextView tvHandleID = (TextView) messageTypeContainer.findViewById(R.id.tvSender);
+            tvHandleID.setText(message.getSender());
         }
 
 

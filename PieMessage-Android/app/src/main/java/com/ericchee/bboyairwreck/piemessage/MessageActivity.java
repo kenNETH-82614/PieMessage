@@ -1,78 +1,84 @@
 package com.ericchee.bboyairwreck.piemessage;
 
 import android.annotation.TargetApi;
-import android.content.ComponentName;
+import android.app.NotificationManager;
+import android.app.RemoteInput;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ImageButton;
-import android.widget.ListView;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.widget.*;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.IOException;
-import java.net.Socket;
 import java.util.ArrayList;
+import java.util.TreeSet;
 
-public class MessageActivity extends AppCompatActivity implements ReceiveMessagesService.Callbacks {
-    public static final String TAG = MessageActivity.class.getSimpleName();
-    TextView tvTarget;
-    EditText etTarget;
-    EditText etMessage;
-    ImageButton ibCheckmark;
-    ClientSocketTask asyncTask;
-    ArrayList<Socket> listOfSockets;
-    ListView lvMessages;
-    ArrayList<Message> arrayOfMessages;
-    MessagesAdapter adapter;
-    Button btnSend;
-    ReceiveMessagesService receiveMessagesService;
-    private boolean boundReceiveService = false;
-    private long chatROWID = -1;
-    String targetString;
-    boolean isNewChat = true;
+public class MessageActivity extends AppCompatActivity {
+    private static final String TAG = MessageActivity.class.getSimpleName();
+    private TextView tvTarget;
+    private EditText etTarget;
+    private EditText etMessage;
+    private ImageButton ibCheckmark;
+    private ListView lvMessages;
+    private TreeSet<Message> setOfMessages;
+    private MessagesAdapter adapter;
+    private Button btnSend;
+    private String chatId = "";
+    private String chatName = "";
+    private boolean isNewChat = true;
+    private int notificationId = 0;
 
+    @TargetApi(Build.VERSION_CODES.KITKAT_WATCH)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        Log.i(TAG, "Creating activity");
+
+        if (getIntent() != null) {
+            chatId = getIntent().getStringExtra(Constants.Col.CHAT_ID);
+            chatName = getIntent().getStringExtra(Constants.Col.CHAT_NAME);
+            notificationId = getIntent().getIntExtra(Constants.Col.ID, 0);
+            if (!chatId.equals("")) {
+                isNewChat = false;
+            }
+        }
+
+
+        Bundle remoteInput = RemoteInput.getResultsFromIntent(getIntent());
+
+        if (remoteInput != null) {
+            String inputString = remoteInput.getCharSequence(Constants.KEY_TEXT_REPLY).toString();
+
+            Message messageInProgress = new Message(inputString, chatId, chatName);
+            Message lastMessage = new TreeSet<>(PieMessageApplication.getInstance().getChats().values()).last().getLastMessage();
+            messageInProgress.setId(lastMessage.getId() + 1);
+            messageInProgress.setDate(lastMessage.getDate() + 1);
+
+            PieMessageApplication.getInstance().addMessage(messageInProgress);
+            PieMessageApplication.getInstance().getServerBridge().sendMessage(messageInProgress, this, true);
+            updateNotification();
+            finish();
+            return;
+        }
+
         setContentView(R.layout.activity_message);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         setStatusBarColor();    // set status bar color
 
-        Log.i(TAG, "Creating activity");
-
-        if (getIntent() != null) {
-            chatROWID = getIntent().getLongExtra(Constants.chatROWID, -1);
-            if (chatROWID != -1) {
-                isNewChat = false;
-            }
-        }
-
         tvTarget = (TextView) findViewById(R.id.tvTarget);
         etTarget = (EditText) findViewById(R.id.etTarget);
         ibCheckmark = (ImageButton) findViewById(R.id.ibCheckmark);
-        listOfSockets = new ArrayList<>();
 
         setTvTargetListener();
         setIbCheckmarkListener();
         initMessagesListAdapter();
-
 
         btnSend = (Button) findViewById(R.id.btnSend);
         etMessage = (EditText) findViewById(R.id.etMessage);
@@ -83,8 +89,15 @@ public class MessageActivity extends AppCompatActivity implements ReceiveMessage
         setSendOnClickListener();
         setBackButtonListener();
 
-        // bind ReceiveMessages
-        bindToReceiveService();
+        if (PieMessageApplication.getInstance().getChats().containsKey(chatId)) {
+            for (Message msg : PieMessageApplication.getInstance().getChats().get(chatId).getMessages()) {
+                if (!msg.isRead()) {
+                    msg.setRead(true);
+                }
+            }
+        }
+
+        PieMessageApplication.getInstance().getServerBridge().addActivity(this);
     }
 
     private void setSendOnClickListener() {
@@ -96,14 +109,12 @@ public class MessageActivity extends AppCompatActivity implements ReceiveMessage
                 updateTargetValue();
                 if (hasSetTargetNumber()) {
                     // if has number, send msg
-                    String targetPhoneNumber = tvTarget.getText().toString().trim();
                     String message = etMessage.getText().toString().trim();
 
                     etMessage.setText(message);
 
                     if (message.length() > 0) {
-                        addSentMessageToListView();
-                        new SendMessageTask(MessageActivity.this, targetPhoneNumber, message).execute();
+                        addSentMessageToListView(message);
                         showBackButton();
                     } else {
                         Log.i(TAG, "Message text has no length");
@@ -116,63 +127,27 @@ public class MessageActivity extends AppCompatActivity implements ReceiveMessage
         });
     }
 
-    public void addSentMessageToListView() {
-        Message messageInProgress = new Message(etMessage.getText().toString(), MessageType.SENT, MessageStatus.IN_PROGRESS, "Me");
-        messageInProgress.setDate(-1);  // TODO need to set date
-        arrayOfMessages.add(messageInProgress);
+    private void addSentMessageToListView(String message) {
+        Message messageInProgress = new Message(message, chatId, chatName);
+        Message lastMessage = new TreeSet<>(PieMessageApplication.getInstance().getChats().values()).last().getLastMessage();
+        messageInProgress.setId(lastMessage.getId() + 1);
+        messageInProgress.setDate(lastMessage.getDate() + 1);
+
+        PieMessageApplication.getInstance().addMessage(messageInProgress);
+        PieMessageApplication.getInstance().getServerBridge().sendMessage(messageInProgress, this, false);
+        setOfMessages.add(messageInProgress);
         etMessage.setText(null);
         adapter.notifyDataSetChanged();
         lvMessages.smoothScrollToPosition(adapter.getCount() - 1);
     }
 
-    public void addReceivedMessageToListView(String messageText, String handleID, long date) {
-        Message receivedMessage = new Message(messageText, MessageType.RECEIVED, MessageStatus.SUCCESSFUL, handleID);
-        receivedMessage.setDate(date);
-        arrayOfMessages.add(receivedMessage);
-        adapter.notifyDataSetChanged();
-        lvMessages.smoothScrollToPosition(adapter.getCount() - 1);
-    }
-
-    private void enableSendButton() {
-        btnSend.setEnabled(true);
-    }
-
-    public void messageStatusReceived(JSONObject messageStatusJSON) throws JSONException {
-        boolean messageSuccessful = messageStatusJSON.getString("messageStatus").equals("successful");
-
-        // Find most recent sent message in progress & same text
-        Message sentMessage = null;
-        for (int i = arrayOfMessages.size() - 1; i >= 0; i--) {
-            Message curMessage = arrayOfMessages.get(i);
-            if (curMessage.messageStatus == MessageStatus.IN_PROGRESS && curMessage.text.equals(messageStatusJSON.getString("message"))) {
-                sentMessage = curMessage;
-                break;
-            }
-        }
-
-        if (sentMessage != null) {
-            // Found most recent message. Sent its status, date, & cROWID
-            sentMessage.messageStatus = messageSuccessful ? MessageStatus.SUCCESSFUL : MessageStatus.UNSUCCESSFUL;
-
-            long date = messageStatusJSON.getLong("date");
-            sentMessage.setDate(date);
-            adapter.notifyDataSetChanged();
-
-            if (chatROWID == -1) {
-                chatROWID = messageStatusJSON.getLong("cROWID");
-                Log.i(TAG, "Setting chatROWID = " + chatROWID);
-            }
-        } else {
-            Log.e(TAG, "Could not find sent message that matched sent response JSON");
-        }
-    }
-
     private void setTvTargetListener() {
         if (!isNewChat) {
             // If previous chat, Set the Handle ID
-            targetString = getIntent().getStringExtra(Constants.chatHandlesString);
-            tvTarget.setText(targetString);
-            etTarget.setText(targetString);
+            chatId = getIntent().getStringExtra(Constants.Col.CHAT_ID);
+            chatName = getIntent().getStringExtra(Constants.Col.CHAT_NAME);
+            tvTarget.setText(chatName);
+            etTarget.setText(chatName);
 
             // Show back button because is previous chat
             showBackButton();
@@ -190,8 +165,8 @@ public class MessageActivity extends AppCompatActivity implements ReceiveMessage
         }
     }
 
-    private boolean hasSetTargetNumber(){
-        return ! tvTarget.getText().toString().equals(getString(R.string.insert_number));
+    private boolean hasSetTargetNumber() {
+        return !tvTarget.getText().toString().equals(getString(R.string.insert_number));
     }
 
     private void setIbCheckmarkListener() {
@@ -207,6 +182,14 @@ public class MessageActivity extends AppCompatActivity implements ReceiveMessage
 
     private void updateTargetValue() {
         String valueOfTarget = etTarget.getText().toString().trim();
+        if (isNewChat && !chatId.startsWith("iMessage;-;")) {
+            chatName = valueOfTarget;
+            if (valueOfTarget.matches("\\d+")) {
+                valueOfTarget = "+1" + valueOfTarget;
+            }
+            chatId = "iMessage;-;" + valueOfTarget;
+        }
+
         if (valueOfTarget.length() > 0) {
             tvTarget.setText(valueOfTarget);
         } else {
@@ -224,26 +207,37 @@ public class MessageActivity extends AppCompatActivity implements ReceiveMessage
         ibCheckmark.setVisibility(View.INVISIBLE);
     }
 
-    public void addSocket(Socket socket) {
-        Log.i(TAG, "Adding socket to list of sockets");
-        listOfSockets.add(socket);
-    }
-
     // Construct data and set in custom adapter
-    private void initMessagesListAdapter() {
+    void initMessagesListAdapter() {
         if (!isNewChat) {
             // grab all messages from chat in sqlite db
-            PieSQLiteOpenHelper dbHelper = PieMessageApplication.getInstance().getDbHelper();
-            arrayOfMessages = dbHelper.getAllMessagesOfChat(chatROWID);
+            setOfMessages = PieMessageApplication.getInstance().getChats().get(chatId).getMessages();
         } else {
             // If new chat, initiate new array of messages
-            arrayOfMessages = new ArrayList<>();
+            setOfMessages = new TreeSet<>();
         }
-        adapter = new MessagesAdapter(this, arrayOfMessages);
+        adapter = new MessagesAdapter(this, new ArrayList<>(setOfMessages));
 
         // Attach adapter to listView
         lvMessages = (ListView) findViewById(R.id.lvMessages);
         lvMessages.setAdapter(adapter);
+        lvMessages.setOnScrollListener(new AbsListView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(AbsListView view, int scrollState) {
+
+            }
+
+            @Override
+            public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+                ArrayList<Message> messages = new ArrayList<>(setOfMessages);
+                for (int i = 0; i < visibleItemCount; i++) {
+                    Message msg = messages.get(i + firstVisibleItem);
+                    if (!msg.isRead()) {
+                        msg.setRead(true);
+                    }
+                }
+            }
+        });
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
@@ -251,49 +245,32 @@ public class MessageActivity extends AppCompatActivity implements ReceiveMessage
         Window window = getWindow();
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
         window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-        window.setStatusBarColor(getResources().getColor(R.color.colorPrimaryDark));
+        window.setStatusBarColor(getResources().getColor(R.color.darkGrey));
     }
 
-    // TODO Delete this method once MessageResponseTask finishes
-    public void disconnectSockets() {
-        for (int i = 0; i < listOfSockets.size(); i++) {
-            try {
-                Log.i(TAG, "Closing socket");
-                listOfSockets.get(i).close();
-            } catch (IOException e) {
-                Log.e(TAG, "Closing buffered reader was unsuccessful");
-                e.printStackTrace();
-            }
-        }
-
-        asyncTask.keepAlive = false;
-
-        asyncTask.cancel(true);
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.i(TAG, "Resuming activity");
+        PieMessageApplication.getInstance().getServerBridge().addActivity(this);
     }
 
     @Override
     protected void onDestroy() {
         Log.i(TAG, "Destroying activity");
-        unbindToReceiveService();
+        PieMessageApplication.getInstance().getServerBridge().removeActivity(this);
         super.onDestroy();
-    }
-
-    @Override
-    protected void onResume() {
-        bindToReceiveService();
-        super.onResume();
     }
 
     @Override
     protected void onPause() {
         Log.i(TAG, "Pausing activity");
-        unbindToReceiveService();
+        PieMessageApplication.getInstance().getServerBridge().removeActivity(this);
         super.onPause();
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
-
         outState.putString("etTarget", etTarget.getText().toString());
         super.onSaveInstanceState(outState);
     }
@@ -304,65 +281,6 @@ public class MessageActivity extends AppCompatActivity implements ReceiveMessage
         String etTargetText = savedInstanceState.getString("etTarget");
         etTarget.setText(etTargetText);
         super.onRestoreInstanceState(savedInstanceState);
-    }
-
-    private ServiceConnection mConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            Log.d(TAG, "onServiceConnected called");
-
-            // Ever service has a binder. In service class we created LocalBinder to get service instance
-            // - set our service field equal to the service instance
-            ReceiveMessagesService.LocalBinder binder = (ReceiveMessagesService.LocalBinder) service;
-            receiveMessagesService = binder.getServiceInstance();
-
-            // Register this activity to get callbacks
-            receiveMessagesService.registerActivity(MessageActivity.this);
-
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            Log.d(TAG, "Service has disconnected");
-            boundReceiveService = false;
-        }
-    };
-
-    @Override
-    public void onReceivedMessages(final String receiveMessagesJsonString) {
-        Log.i(TAG, "JSON received message - " + receiveMessagesJsonString);
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                JSONObject receivedMessagesJSON = null;
-                JSONArray foundMessagesJSON = null;
-                try {
-                    receivedMessagesJSON = new JSONObject(receiveMessagesJsonString);
-
-                    foundMessagesJSON = receivedMessagesJSON.getJSONArray("incomingMessages");
-
-                    for (int i = 0; i < foundMessagesJSON.length(); i++) {
-                        JSONObject foundMessageJSON = (JSONObject) foundMessagesJSON.get(i);
-
-                        printFoundMessages(foundMessageJSON);   // todo testing
-
-                        String messageText = foundMessageJSON.getString("text");
-                        String handleID = foundMessageJSON.getString("h.id");
-                        long curChatROWID = foundMessageJSON.getLong("c.ROWID");
-                        int is_from_me = foundMessageJSON.getInt("is_from_me");
-                        long date = foundMessageJSON.getLong("date");
-                        Log.i(TAG, messageText);
-
-                        // If message belongs to this chat & is not from me
-                        if (curChatROWID == MessageActivity.this.chatROWID && is_from_me == 0) {   // TODO need better way to detect if chat
-                            addReceivedMessageToListView(messageText, handleID, date);
-                        }
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
     }
 
     private void setBackButtonListener() {
@@ -387,26 +305,8 @@ public class MessageActivity extends AppCompatActivity implements ReceiveMessage
         ibMABackArrow.setVisibility(View.VISIBLE);
     }
 
-    private void bindToReceiveService() {
-        Intent receiveMessagesServiceIntent = new Intent(this, ReceiveMessagesService.class);
-        boundReceiveService = getApplicationContext().bindService(receiveMessagesServiceIntent, mConnection, Context.BIND_AUTO_CREATE);
-    }
-
-    private void unbindToReceiveService() {
-        if (boundReceiveService) {
-            if (receiveMessagesService != null) {
-                receiveMessagesService.unregisterActivity();
-            }
-            getApplicationContext().unbindService(mConnection);
-            boundReceiveService = false;
-        }
-    }
-
-    private void printFoundMessages(JSONObject foundMessageJSON) throws JSONException {
-        for (int i = 0; i < foundMessageJSON.names().length(); i++) {
-            String key = foundMessageJSON.names().getString(i);
-            String value = foundMessageJSON.get(key).toString();
-            Log.i(TAG, key + " - " + value);
-        }
+    void updateNotification() {
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.cancel(notificationId);
     }
 }

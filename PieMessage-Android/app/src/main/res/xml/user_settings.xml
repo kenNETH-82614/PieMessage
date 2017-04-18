@@ -2,9 +2,14 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
     <PreferenceCategory android:title="Settings">
         <EditTextPreference
-            android:title="Socket IP address"
-            android:summary="Set your OSX Client's IP address"
-            android:key="@string/pref_socket_address_key"
-            />
+                android:title="Socket IP address"
+                android:summary="Set your OSX Client's IP address"
+                android:key="@string/pref_socket_address_key"
+                android:singleLine="true"/>
+        <EditTextPreference
+            android:title="OSX Password"
+            android:summary="Set your OSX Client's Password"
+            android:key="@string/pref_password"
+            android:singleLine="true"/>
     </PreferenceCategory>
 </PreferenceScreen>

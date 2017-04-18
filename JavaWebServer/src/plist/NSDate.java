@@ -36,19 +36,61 @@ import java.util.TimeZone;
  */
 public class NSDate extends NSObject {
 
-    private Date date;
-
     // EPOCH = new SimpleDateFormat("yyyy MM dd zzz").parse("2001 01 01 GMT").getTime();
     // ...but that's annoying in a static initializer because it can throw exceptions, ick.
     // So we just hardcode the correct value.
     private final static long EPOCH = 978307200000L;
-
     private static final SimpleDateFormat sdfDefault = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
     private static final SimpleDateFormat sdfGnuStep = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
 
     static {
         sdfDefault.setTimeZone(TimeZone.getTimeZone("GMT"));
         sdfGnuStep.setTimeZone(TimeZone.getTimeZone("GMT"));
+    }
+
+    private Date date;
+
+    /**
+     * Creates a date from its binary representation.
+     *
+     * @param bytes The date bytes
+     */
+    public NSDate(byte[] bytes) {
+        this(bytes, 0, bytes.length);
+    }
+
+    /**
+     * Creates a date from its binary representation.
+     *
+     * @param bytes      byte array with all information
+     * @param startIndex int with the starting index of the date
+     * @param endIndex   int with the end index of the date
+     */
+    public NSDate(byte[] bytes, final int startIndex, final int endIndex) {
+        //dates are 8 byte big-endian double, seconds since the epoch
+        date = new Date(EPOCH + (long) (1000 * BinaryPropertyListParser.parseDouble(bytes, startIndex, endIndex)));
+    }
+
+    /**
+     * Parses a date from its textual representation.
+     * That representation has the following pattern: <code>yyyy-MM-dd'T'HH:mm:ss'Z'</code>
+     *
+     * @param textRepresentation The textual representation of the date (ISO 8601 format)
+     * @throws ParseException When the date could not be parsed, i.e. it does not match the expected pattern.
+     */
+    public NSDate(String textRepresentation) throws ParseException {
+        date = parseDateString(textRepresentation);
+    }
+
+    /**
+     * Creates a NSDate from a Java Date
+     *
+     * @param d The date
+     */
+    public NSDate(Date d) {
+        if (d == null)
+            throw new IllegalArgumentException("Date cannot be null");
+        date = d;
     }
 
     /**
@@ -89,49 +131,6 @@ public class NSDate extends NSObject {
      */
     private static synchronized String makeDateStringGnuStep(Date date) {
         return sdfGnuStep.format(date);
-    }
-
-    /**
-     * Creates a date from its binary representation.
-     *
-     * @param bytes The date bytes
-     */
-    public NSDate(byte[] bytes){
-        this(bytes, 0, bytes.length);
-    }
-
-    /**
-     * Creates a date from its binary representation.
-     *
-     * @param bytes byte array with all information
-     * @param startIndex int with the starting index of the date
-     * @param endIndex int with the end index of the date
-     */
-    public NSDate(byte[] bytes, final int startIndex, final int endIndex) {
-        //dates are 8 byte big-endian double, seconds since the epoch
-        date = new Date(EPOCH + (long) (1000 * BinaryPropertyListParser.parseDouble(bytes, startIndex, endIndex)));
-    }
-
-    /**
-     * Parses a date from its textual representation.
-     * That representation has the following pattern: <code>yyyy-MM-dd'T'HH:mm:ss'Z'</code>
-     *
-     * @param textRepresentation The textual representation of the date (ISO 8601 format)
-     * @throws ParseException When the date could not be parsed, i.e. it does not match the expected pattern.
-     */
-    public NSDate(String textRepresentation) throws ParseException {
-        date = parseDateString(textRepresentation);
-    }
-
-    /**
-     * Creates a NSDate from a Java Date
-     *
-     * @param d The date
-     */
-    public NSDate(Date d) {
-        if (d == null)
-            throw new IllegalArgumentException("Date cannot be null");
-        date = d;
     }
 
     /**

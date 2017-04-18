@@ -1,51 +1,60 @@
 package com.ericchee.bboyairwreck.piemessage;
 
-import java.util.HashSet;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 /**
  * Created by echee on 12/16/15.
  */
-public class Chat {
-    HashSet<String> handles;
-    long cROWID;
-    long date;
-    String lastText;
+class Chat implements Comparable<Chat> {
+    private String id;
+    private String name;
+    private TreeMap<Long, Message> messages;
 
-    public Chat(HashSet<String> handles, long cROWID) {
-        this.handles = handles;
-        this.cROWID = cROWID;
-        this.lastText = "...";
+    Chat(String id, String name) {
+        this.id = id;
+        this.name = name;
+        this.messages = new TreeMap<>();
     }
 
-    public Chat(HashSet<String> handles, long cROWID, long date) {
-        this.handles = handles;
-        this.cROWID = cROWID;
-        this.date = date;
-        this.lastText = "...";
+    String getId() {
+        return id;
     }
 
-    public Chat() {
-        this.handles = new HashSet<>();
-        this.cROWID = -1;
-        this.date = -1;
-        this.lastText = "...";
-    }
-
-    public String getHandlesString() {
-        String handlesString = "";
-        int i = 0;
-        for (String handle : this.handles) {
-            handlesString += handle;
-            if (i < this.handles.size() -1) {
-                handlesString += ", ";
-            }
-            i++;
+    String getName() {
+        if (name.equals("")) {
+            if (messages.isEmpty()) return id.substring(11);
+            else return getLastMessage().getSender();
         }
-
-        return handlesString;
+        return name;
     }
 
-    public String getLastText() {
-        return lastText;
+    TreeSet<Message> getMessages() {
+        return new TreeSet<>(messages.values());
+    }
+
+    Message getLastMessage() {
+        return messages.lastEntry().getValue();
+    }
+
+    void addMessage(long messageId, Message message) {
+        this.messages.put(messageId, message);
+    }
+
+    void removeMessage(long messageId) {
+        this.messages.remove(messageId);
+    }
+
+    public void setMessages(TreeMap<Long, Message> messages) {
+        this.messages = messages;
+    }
+
+    boolean shouldUpdate(Chat newChat) {
+        return id.equals(newChat.getId()) && name.equals(newChat.getName());
+    }
+
+    @Override
+    public int compareTo(Chat chat) {
+        return getLastMessage().compareTo(chat.getLastMessage());
     }
 }

@@ -1,67 +1,46 @@
+import java.io.BufferedReader;
 import java.io.File;
-import java.util.Calendar;
-import java.util.Date;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
 
 /**
  * Created by eric on 11/17/15.
  */
 public class PieOSXClient {
+    private static DatabaseManager databaseManager;
 
-    private static String address;
-    private static int port;
-
-    private PieOSXClient() {
-        doesMessageScriptExist();   // Ensure we have a ~/messages.applescript;
-
-        // Start outgoing thread
-        OSXOutgoingMessageThread outgoingThread = new OSXOutgoingMessageThread();
-        Thread outThread = new Thread(outgoingThread);
-        outgoingThread.setThread(outThread);
-        outThread.start();
-
-        // Start incoming thread
-        OSXIncomingMessageThread incomingThread = new OSXIncomingMessageThread();
-        Thread inThread = new Thread(incomingThread);
-        incomingThread.setThread(inThread);
-        inThread.start();
+    private PieOSXClient(int port, String password) {
+        databaseManager = new DatabaseManager();
+        if (doesMessageScriptExist()) new Server(port, password); // Ensure we have a ~/messages.applescript;
     }
 
-    public static void main(String[] args) {
-        if (args.length > 0) {
-            address = args[0];
-            port = 5000;
-            if (address.contains(":")) {
-                port = Integer.parseInt(address.split(":")[1]);
-                address = address.split(":")[0];
-            }
-            new PieOSXClient();
-        } else System.out.println("Please provide your.public.ip.address:port as an argument (:port is optional)");
+    public static void main(String[] args) throws IOException {
+        int port = 5000;
+        if (args.length == 1) {
+            port = Integer.parseInt(args[0]);
+        }
+
+        String password = new String(System.console().readPassword("Please enter a password: "));
+        if (password.length() < 5) {
+            System.out.println("Please use a more secure password.");
+            System.exit(1);
+            return;
+        }
+
+        URL checkIp = new URL("http://checkip.amazonaws.com");
+        BufferedReader in = new BufferedReader(new InputStreamReader(checkIp.openStream()));
+        String ip = in.readLine();
+        System.out.println("To connect to the server, use the ip " + ip + (port != 5000 ? ":" + port : "") + " and your password.");
+        new PieOSXClient(port, password);
     }
 
-    public static String getDateString() {
-        Date d = new Date();
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(d);
-
-        int month = cal.get(Calendar.MONTH) + 1;
-        int dateNum = cal.get(Calendar.DAY_OF_MONTH);
-        int year = cal.get(Calendar.YEAR);
-
-        String dateString = year + "-" + month + "-" + dateNum;
-
-        return dateString;
-    }
-
-    public static String getHomeDirectory() {
+    static String getHomeDirectory() {
         return System.getProperty("user.home");
     }
 
-    public static String getAddress() {
-        return address;
-    }
-
-    public static int getPort() {
-        return port;
+    public static DatabaseManager getDatabaseManager() {
+        return databaseManager;
     }
 
     private boolean doesMessageScriptExist() {

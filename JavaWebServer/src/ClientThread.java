@@ -1,4 +1,3 @@
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -134,7 +133,7 @@ public class ClientThread implements Runnable {
                 System.out.println("Lost connection of OSX Client");
                 server.setOsxOutgoingOutput(null);
                 server.setOsxOutgoingInput(null);
-            } else if (deviceType == DeviceType.MOBILE){
+            } else if (deviceType == DeviceType.MOBILE) {
                 System.out.println("Lost connection of Mobile Client");
                 server.removeMobileThread(this);
             } else {
@@ -208,22 +207,6 @@ public class ClientThread implements Runnable {
         output.println(notif);  // Tell client the device type has been registered
     }
 
-    private enum DeviceType {
-        UNDEFINED ("UNDEFINED"),
-        OSX_CLIENT ("OSX_CLIENT"),
-        MOBILE ("MOBILE");
-
-        private String deviceString;
-
-        DeviceType(String deviceNum) {
-            this.deviceString = deviceNum;
-        }
-
-        public String getVal() {
-            return this.deviceString;
-        }
-    }
-
     public void setThread(Thread thread) {
         this.thread = thread;
     }
@@ -241,6 +224,22 @@ public class ClientThread implements Runnable {
             System.out.println("Removing incoming I/O refs");
             server.osxIncomingInput = null;
             server.osxIncomingOutput = null;
+        }
+    }
+
+    private enum DeviceType {
+        UNDEFINED("UNDEFINED"),
+        OSX_CLIENT("OSX_CLIENT"),
+        MOBILE("MOBILE");
+
+        private String deviceString;
+
+        DeviceType(String deviceNum) {
+            this.deviceString = deviceNum;
+        }
+
+        public String getVal() {
+            return this.deviceString;
         }
     }
 }
