@@ -6,13 +6,10 @@
     <string name="title_activity_conversation">ConversationActivity</string>
     <string name="reply_label">Reply</string>
 
-    <string name="hello_world">Hello world!</string>
     <string name="pref_socket_address_key">prefSocketAddress</string>
     <string name="pref_password">prefPassword</string>
-    <string name="welcome_title">Welcome to\nPie Message!</string>
-    <string name="ask_ip">Please enter the OSX Client\'s IP Address</string>
-    <string name="ask_ip_hint">ex. 127.0.0.1</string>
-    <string name="ask_pass">And its password</string>
+    <string name="ask_ip">Server IP Address</string>
+    <string name="ask_pass">Password</string>
     <string name="login">Login</string>
     <string name="to">To:</string>
     <string name="back_arrow">Back arrow</string>
@@ -23,4 +20,12 @@
     <string name="msg">Message</string>
     <string name="unknown_date">Date</string>
     <string name="checkmark_button">Checkmark button</string>
+    <string name="edit">Edit</string>
+    <string name="messages">Messages</string>
+    <string name="compose_button">Compose button</string>
+    <string name="login_prompt">Enter your server IP and password</string>
+    <string name="recipient">Recipient</string>
+    <string name="send_button">Send button</string>
+    <string name="message">Message</string>
+    <string name="info_button">Info button</string>
 </resources>

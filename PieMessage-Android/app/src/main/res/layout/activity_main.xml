@@ -3,94 +3,88 @@
                 xmlns:tools="http://schemas.android.com/tools"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:background="@color/white"
                 android:paddingBottom="@dimen/activity_vertical_margin"
                 android:paddingLeft="@dimen/activity_horizontal_margin"
                 android:paddingRight="@dimen/activity_horizontal_margin"
                 android:paddingTop="@dimen/activity_vertical_margin"
                 tools:context="com.ericchee.bboyairwreck.piemessage.MainActivity"
-                android:background="@color/white"
 >
 
+    <Button
+        android:id="@+id/btnStartPie"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:text="@string/login"
+    />
+
     <RelativeLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="30dp"
-    >
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="30dp">
 
         <TextView
-                android:id="@+id/tvWelcomeTitle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerHorizontal="true"
-                android:text="@string/welcome_title"
-                android:textSize="40sp"
-                android:textColor="@color/black"
-                android:textAlignment="center"
-        />
-
-        <TextView
-                android:id="@+id/tvEnterOSXIPAddress"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/tvWelcomeTitle"
-                android:layout_marginTop="60dp"
-                android:layout_centerHorizontal="true"
-                android:textSize="20sp"
-                android:textAlignment="center"
-                android:textColor="@color/black"
-                android:text="@string/ask_ip"
-        />
-        <EditText
-                android:id="@+id/etSocketAddress"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/tvEnterOSXIPAddress"
-                android:layout_marginTop="10dp"
-                android:hint="@string/ask_ip_hint"
-                android:textColor="@color/black"
-                android:textColorHint="@color/grey"
-                tools:msg="127.0.0.1"
-                android:textAlignment="center"
-                android:inputType="text"
-                android:maxLines="1"
-                android:imeOptions="actionNext"
-        />
-        <TextView
-            android:id="@+id/tvEnterOSXPassword"
+            android:id="@+id/tvWelcomeTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@id/etSocketAddress"
-            android:layout_marginTop="10dp"
             android:layout_centerHorizontal="true"
-            android:textSize="20sp"
+            android:layout_marginBottom="10dp"
+            android:text="@string/app_name"
             android:textAlignment="center"
             android:textColor="@color/black"
-            android:text="@string/ask_pass"
-            android:labelFor="@+id/etPassword"
+            android:textSize="40sp"
         />
-        <EditText
-                android:id="@+id/etPassword"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/tvEnterOSXPassword"
-                android:layout_marginTop="10dp"
-                android:textColor="@color/black"
-                android:textColorHint="@color/grey"
-                tools:msg="password"
-                android:textAlignment="center"
-                android:inputType="textPassword"
-                android:maxLines="1"
-                android:imeOptions="actionDone"
-        />
-    </RelativeLayout>
 
-    <Button
-            android:id="@+id/btnStartPie"
+        <TextView
+            android:id="@+id/tvWelcomeSubtitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/login"
-            android:layout_alignParentBottom="true"
-            android:layout_alignParentEnd="true"
-    />
+            android:layout_below="@id/tvWelcomeTitle"
+            android:layout_centerHorizontal="true"
+            android:text="@string/login_prompt"
+            android:textAlignment="center"
+            android:textColor="@color/black"
+            android:textSize="20sp"
+        />
+
+        <EditText
+            android:id="@+id/etSocketAddress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/tvWelcomeSubtitle"
+            android:layout_marginTop="10dp"
+            android:background="@color/lightGrey"
+            android:hint="@string/ask_ip"
+            android:imeOptions="actionNext"
+            android:inputType="text"
+            android:maxLines="1"
+            android:padding="10dp"
+            android:textAlignment="center"
+            android:textColor="@color/black"
+            android:textColorHint="@color/grey"
+            tools:msg="127.0.0.1"
+        />
+        <EditText
+            android:id="@+id/etPassword"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/etSocketAddress"
+            android:layout_marginTop="10dp"
+            android:background="@color/lightGrey"
+            android:hint="@string/ask_pass"
+            android:imeOptions="actionDone"
+            android:inputType="textPassword"
+            android:maxLines="1"
+            android:padding="10dp"
+            android:textAlignment="center"
+            android:textColor="@color/black"
+            android:textColorHint="@color/grey"
+            tools:msg="password"
+        />
+    </RelativeLayout>
 
 </RelativeLayout>

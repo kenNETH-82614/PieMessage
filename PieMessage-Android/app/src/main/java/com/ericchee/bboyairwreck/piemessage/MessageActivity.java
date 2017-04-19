@@ -1,14 +1,13 @@
 package com.ericchee.bboyairwreck.piemessage;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.app.NotificationManager;
 import android.app.RemoteInput;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
@@ -18,16 +17,15 @@ import android.widget.*;
 import java.util.ArrayList;
 import java.util.TreeSet;
 
-public class MessageActivity extends AppCompatActivity {
+public class MessageActivity extends Activity {
     private static final String TAG = MessageActivity.class.getSimpleName();
     private TextView tvTarget;
     private EditText etTarget;
     private EditText etMessage;
-    private ImageButton ibCheckmark;
     private ListView lvMessages;
     private TreeSet<Message> setOfMessages;
     private MessagesAdapter adapter;
-    private Button btnSend;
+    private ImageButton btnSend;
     private String chatId = "";
     private String chatName = "";
     private boolean isNewChat = true;
@@ -68,23 +66,18 @@ public class MessageActivity extends AppCompatActivity {
         }
 
         setContentView(R.layout.activity_message);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
         setStatusBarColor();    // set status bar color
 
         tvTarget = (TextView) findViewById(R.id.tvTarget);
         etTarget = (EditText) findViewById(R.id.etTarget);
-        ibCheckmark = (ImageButton) findViewById(R.id.ibCheckmark);
 
         setTvTargetListener();
-        setIbCheckmarkListener();
         initMessagesListAdapter();
 
-        btnSend = (Button) findViewById(R.id.btnSend);
+        btnSend = (ImageButton) findViewById(R.id.btnSend);
         etMessage = (EditText) findViewById(R.id.etMessage);
 
         btnSend.setEnabled(true);
-        btnSend.setBackgroundResource(R.color.purple);
 
         setSendOnClickListener();
         setBackButtonListener();
@@ -112,10 +105,11 @@ public class MessageActivity extends AppCompatActivity {
                     String message = etMessage.getText().toString().trim();
 
                     etMessage.setText(message);
+                    etTarget.setVisibility(View.GONE);
+                    tvTarget.setVisibility(View.VISIBLE);
 
                     if (message.length() > 0) {
                         addSentMessageToListView(message);
-                        showBackButton();
                     } else {
                         Log.i(TAG, "Message text has no length");
                     }
@@ -148,20 +142,9 @@ public class MessageActivity extends AppCompatActivity {
             chatName = getIntent().getStringExtra(Constants.Col.CHAT_NAME);
             tvTarget.setText(chatName);
             etTarget.setText(chatName);
-
-            // Show back button because is previous chat
-            showBackButton();
         } else {
-            // If new chat, listen for if tap on Target textview
-            tvTarget.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    tvTarget.setVisibility(View.INVISIBLE);
-                    etTarget.setVisibility(View.VISIBLE);
-                    ibCheckmark.setVisibility(View.VISIBLE);
-                    etTarget.requestFocus();
-                }
-            });
+            tvTarget.setVisibility(View.GONE);
+            etTarget.setVisibility(View.VISIBLE);
         }
     }
 
@@ -169,42 +152,28 @@ public class MessageActivity extends AppCompatActivity {
         return !tvTarget.getText().toString().equals(getString(R.string.insert_number));
     }
 
-    private void setIbCheckmarkListener() {
-        if (isNewChat) {
-            ibCheckmark.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    updateTargetValue();
-                }
-            });
-        }
-    }
-
     private void updateTargetValue() {
         String valueOfTarget = etTarget.getText().toString().trim();
-        if (isNewChat && !chatId.startsWith("iMessage;-;")) {
+        if (isNewChat && !chatId.startsWith(Constants.PRIVATE_MSG_PREFIX)) {
             chatName = valueOfTarget;
             if (valueOfTarget.matches("\\d+")) {
                 valueOfTarget = "+1" + valueOfTarget;
             }
-            chatId = "iMessage;-;" + valueOfTarget;
+            chatId = Constants.PRIVATE_MSG_PREFIX + valueOfTarget;
         }
 
         if (valueOfTarget.length() > 0) {
             tvTarget.setText(valueOfTarget);
         } else {
-            tvTarget.setText(getString(R.string.insert_number));
+            tvTarget.setText(getString(R.string.recipient));
             Log.i(TAG, "Target value is invalid");
             Toast.makeText(
                     getApplicationContext(),
-                    "Please add valid target",
+                    "Please enter a valid recipient",
                     Toast.LENGTH_SHORT)
                     .show();
         }
         etTarget.setText(valueOfTarget);    // set etTarget to trimmed string
-        tvTarget.setVisibility(View.VISIBLE);
-        etTarget.setVisibility(View.INVISIBLE);
-        ibCheckmark.setVisibility(View.INVISIBLE);
     }
 
     // Construct data and set in custom adapter
@@ -240,12 +209,12 @@ public class MessageActivity extends AppCompatActivity {
         });
     }
 
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    @TargetApi(Build.VERSION_CODES.M)
     private void setStatusBarColor() {
         Window window = getWindow();
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
         window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-        window.setStatusBarColor(getResources().getColor(R.color.darkGrey));
+        window.setStatusBarColor(getApplicationContext().getColor(R.color.darkGrey));
     }
 
     @Override
@@ -284,7 +253,7 @@ public class MessageActivity extends AppCompatActivity {
     }
 
     private void setBackButtonListener() {
-        ImageButton ibMABackArrow = (ImageButton) findViewById(R.id.ibMABackArrow);
+        ImageButton ibMABackArrow = (ImageButton) findViewById(R.id.backArrow);
         ibMABackArrow.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -294,19 +263,12 @@ public class MessageActivity extends AppCompatActivity {
         });
     }
 
-    private void showBackButton() {
-        TextView tvTo = (TextView) findViewById(R.id.tvTo);
-        ImageButton ibMABackArrow = (ImageButton) findViewById(R.id.ibMABackArrow);
-
-        // Hide To: textview
-        tvTo.setVisibility(View.GONE);
-
-        // Show back arrow
-        ibMABackArrow.setVisibility(View.VISIBLE);
-    }
-
-    void updateNotification() {
+    private void updateNotification() {
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.cancel(notificationId);
+    }
+
+    String getChatId() {
+        return chatId;
     }
 }

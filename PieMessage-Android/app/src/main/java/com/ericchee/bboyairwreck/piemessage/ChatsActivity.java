@@ -1,16 +1,17 @@
 package com.ericchee.bboyairwreck.piemessage;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.ImageButton;
 import android.widget.ListView;
+import android.widget.TextView;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -19,7 +20,7 @@ import java.util.Collections;
 import java.util.Comparator;
 
 
-public class ChatsActivity extends AppCompatActivity {
+public class ChatsActivity extends Activity {
     private static final String TAG = ChatsActivity.class.getSimpleName();
     private static final int SETTINGS_RESULT = 1;
     private SwipeRefreshLayout swipeContainer;
@@ -79,8 +80,8 @@ public class ChatsActivity extends AppCompatActivity {
             }
         });
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fabNewMessage);
-        fab.setOnClickListener(new View.OnClickListener() {
+        ImageButton composeButton = (ImageButton) findViewById(R.id.composeButton);
+        composeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Intent messageIntent = new Intent(ChatsActivity.this, MessageActivity.class);
@@ -105,7 +106,8 @@ public class ChatsActivity extends AppCompatActivity {
 
         // Set adapter for chats list view
         lvChats = (ListView) findViewById(R.id.lvChats);
-        ChatsAdapter chatsAdapter = new ChatsAdapter(this, chatsList);
+        TextView messagesTitle = (TextView) findViewById(R.id.tvMessageTitle);
+        ChatsAdapter chatsAdapter = new ChatsAdapter(this, chatsList, messagesTitle);
         lvChats.setAdapter(chatsAdapter);
     }
 

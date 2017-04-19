@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:orientation="horizontal"
               android:layout_width="match_parent"
               android:layout_height="wrap_content"
+              android:layout_marginBottom="13dp"
+              android:orientation="horizontal"
               android:padding="@dimen/chat_item_padding"
-              android:layout_marginBottom="13dp">
+              android:paddingEnd="5dp"
+              android:paddingStart="5dp">
 
     <View
         android:id="@+id/vUnreadCircle"
@@ -12,23 +14,25 @@
         android:layout_height="8dp"
         android:layout_gravity="center"
         android:layout_marginEnd="5dp"
-        android:background="@drawable/unread_circle"
+        android:background="@drawable/circle"
+        android:backgroundTint="@color/azureBlue"
         android:visibility="invisible"/>
 
     <View
-        android:background="@drawable/chat_circle"
-        android:layout_height="40dp"
         android:layout_width="40dp"
-        android:layout_marginTop="7dp"
+        android:layout_height="40dp"
         android:layout_marginBottom="7dp"
+        android:layout_marginTop="7dp"
+        android:background="@drawable/circle"
+        android:backgroundTint="@color/grey"
     />
 
 
     <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginStart="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:orientation="vertical"
     >
 
         <LinearLayout
@@ -40,42 +44,42 @@
                 android:id="@+id/tvChatName"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/unknown_name"
-                android:textSize="20sp"
-                android:maxLines="1"
-                android:ellipsize="end"
-                android:textColor="@color/black"
                 android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="@string/unknown_name"
+                android:textColor="@color/black"
+                android:textSize="20sp"
                 />
 
             <TextView
                 android:id="@+id/tvLastDate"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/unknown_date"
-                android:maxLines="1"
-                android:textColor="@color/darkGrey"
-                android:layout_weight="0"
                 android:layout_gravity="center"
+                android:layout_weight="0"
+                android:maxLines="1"
+                android:text="@string/unknown_date"
+                android:textColor="@color/darkGrey"
                 />
 
             <View
                 android:layout_width="20sp"
                 android:layout_height="20sp"
+                android:layout_gravity="center"
                 android:background="@drawable/ic_chevron_right_black_24dp"
                 android:backgroundTint="@color/grey"
-                android:layout_gravity="center"
                 />
         </LinearLayout>
 
         <TextView
-                android:id="@+id/tvLastMessage"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="asdf asdklfjadsklfjakldsjflaksdkafj aslfkasldkfjakl jakj akdj kjkj jfdkfdjskajslkdfj @string/msg_content"
-                android:textSize="12sp"
-                android:ellipsize="end"
-                android:maxLines="2"
+            android:id="@+id/tvLastMessage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:text="@string/msg_content"
+            android:textSize="12sp"
             />
     </LinearLayout>
 

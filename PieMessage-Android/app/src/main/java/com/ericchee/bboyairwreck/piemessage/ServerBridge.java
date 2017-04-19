@@ -1,8 +1,8 @@
 package com.ericchee.bboyairwreck.piemessage;
 
+import android.app.Activity;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Base64;
 import android.util.Log;
 import org.json.JSONArray;
@@ -76,9 +76,13 @@ class ServerBridge {
                             public void run(JSONObject responseJson) {
                                 try {
                                     if (responseJson.getInt(Constants.NUM_MESSAGES) > 0) {
+                                        HashSet<String> openChatIds = new HashSet<>();
+                                        for (final MessageActivity messageActivity : messageActivities) {
+                                            openChatIds.add(messageActivity.getChatId());
+                                        }
                                         for (Message message : parseMessages(responseJson)) {
                                             PieMessageApplication.getInstance().addMessage(message);
-                                            if (!message.isRead()) {
+                                            if (!message.isRead() && !openChatIds.contains(message.getChatId())) {
                                                 Notification.postNotification(message.getMsg(), message.getSender(), message.getChatId(), message.getChatName());
                                             }
                                         }
@@ -326,7 +330,7 @@ class ServerBridge {
         shouldPing = false;
     }
 
-    void addActivity(AppCompatActivity activity) {
+    void addActivity(Activity activity) {
         if (activity instanceof ChatsActivity) {
             chatsActivities.add((ChatsActivity) activity);
         } else if (activity instanceof MessageActivity) {
@@ -334,7 +338,7 @@ class ServerBridge {
         }
     }
 
-    void removeActivity(AppCompatActivity activity) {
+    void removeActivity(Activity activity) {
         if (activity instanceof ChatsActivity) {
             chatsActivities.remove(activity);
         } else if (activity instanceof MessageActivity) {

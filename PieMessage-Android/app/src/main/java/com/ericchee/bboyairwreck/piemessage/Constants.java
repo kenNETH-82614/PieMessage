@@ -15,7 +15,7 @@ class Constants {
         return (getNowMilliseconds() - get2001Milliseconds()) / 1000;
     }
 
-    private static long get2001Milliseconds() {
+    static long get2001Milliseconds() {
         Date date2001 = null;
         try {
             SimpleDateFormat sdf = new SimpleDateFormat("dd-M-yyyy hh:mm:ss", Locale.US);
@@ -43,6 +43,7 @@ class Constants {
     static final int SECRET_PAD_LEN = 16;
 
     static final String ME = "Me";
+    static final String PRIVATE_MSG_PREFIX = "iMessage;-;";
 
     static final String NUM_MESSAGES = "numMessages";
     static final String ACTION = "action";

@@ -1,6 +1,6 @@
 package com.ericchee.bboyairwreck.piemessage;
 
-import android.app.Activity;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.EditTextPreference;
@@ -65,9 +65,9 @@ public class PiePreferenceActivity extends android.preference.PreferenceActivity
         }
 
         @Override
-        public void onAttach(Activity activity) {
-            super.onAttach(activity);
-            PreferenceManager.getDefaultSharedPreferences(activity).registerOnSharedPreferenceChangeListener(this);
+        public void onAttach(Context context) {
+            super.onAttach(context);
+            PreferenceManager.getDefaultSharedPreferences(context).registerOnSharedPreferenceChangeListener(this);
         }
     }
 

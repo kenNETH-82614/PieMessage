@@ -7,6 +7,7 @@ import android.app.RemoteInput;
 import android.app.TaskStackBuilder;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.drawable.Icon;
 import android.media.RingtoneManager;
 import android.os.Build;
 import android.util.Log;
@@ -16,11 +17,11 @@ import android.util.Log;
  *
  * @author david
  */
-public class Notification {
+class Notification {
     private static PieMessageApplication pma = PieMessageApplication.getInstance();
     private static int lastNotifId = 0;
 
-    @TargetApi(Build.VERSION_CODES.KITKAT_WATCH)
+    @TargetApi(Build.VERSION_CODES.M)
     static void postNotification(String text, String sender, String chatId, String chatName) {
         int notifId = getNotifId();
 
@@ -42,7 +43,7 @@ public class Notification {
                 .setLabel(replyLabel)
                 .build();
 
-        android.app.Notification.Action action = new android.app.Notification.Action.Builder(R.mipmap.notif_icon, replyLabel, resultPendingIntent)
+        android.app.Notification.Action action = new android.app.Notification.Action.Builder(Icon.createWithResource("", R.mipmap.notif_icon), replyLabel, resultPendingIntent)
                 .addRemoteInput(remoteInput)
                 .build();
 

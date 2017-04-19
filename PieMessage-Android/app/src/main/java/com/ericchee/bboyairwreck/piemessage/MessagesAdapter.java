@@ -35,7 +35,7 @@ public class MessagesAdapter extends ArrayAdapter<Message> {
             convertView = LayoutInflater.from(getContext()).inflate(R.layout.item_message, parent, false);
         }
 
-        if (message.getChatName().equals(message.getSender())) {
+        if (message.getChatId().startsWith(Constants.PRIVATE_MSG_PREFIX)) {
             convertView.findViewById(R.id.tvSender).setVisibility(View.GONE);
         }
 
@@ -58,13 +58,16 @@ public class MessagesAdapter extends ArrayAdapter<Message> {
             Drawable tvMessageBackground = tvMessage.getBackground();
             switch (message.getMessageStatus()) {
                 case SUCCESSFUL:
-                    tvMessageBackground = messageTypeContainer.getResources().getDrawable(R.drawable.round_rectangle_blue);  // TODO getDrawable(id, Theme) for lollipop
+                    tvMessageBackground = getContext().getDrawable(R.drawable.round_rectangle);  // TODO getDrawable(id, Theme) for lollipop
+                    tvMessageBackground.setTint(R.color.azureBlue);
                     break;
                 case UNSUCCESSFUL:
-                    tvMessageBackground = messageTypeContainer.getResources().getDrawable(R.drawable.round_rectangle_aquamarine);  // TODO getDrawable(id, Theme) for lollipop
+                    tvMessageBackground = getContext().getDrawable(R.drawable.round_rectangle);  // TODO getDrawable(id, Theme) for lollipop
+                    tvMessageBackground.setTint(R.color.lightBlue);
                     break;
                 case IN_PROGRESS:
-                    tvMessageBackground = messageTypeContainer.getResources().getDrawable(R.drawable.round_rectangle_grey);  // TODO getDrawable(id, Theme) for lollipop
+                    tvMessageBackground = getContext().getDrawable(R.drawable.round_rectangle);  // TODO getDrawable(id, Theme) for lollipop
+                    tvMessageBackground.setTint(R.color.grey);
                     break;
             }
 

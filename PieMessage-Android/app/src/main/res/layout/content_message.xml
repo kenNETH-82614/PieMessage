@@ -12,34 +12,67 @@
                 tools:context="com.ericchee.bboyairwreck.piemessage.MessageActivity"
                 tools:showIn="@layout/activity_message">
 
-    <Button
-            android:id="@+id/btnSend"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/send"
-            android:layout_alignParentBottom="true"
-            android:layout_alignParentEnd="true"
-            android:textColor="@color/white"
-            android:enabled="false"
-    />
-    <EditText
-            android:id="@+id/etMessage"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_toStartOf="@id/btnSend"
-            android:layout_alignParentBottom="true"
-            android:inputType="textAutoCorrect|textCapSentences"
-            android:labelFor="@id/etMessage"
-    />
-    <ListView
-            android:id="@+id/lvMessages"
+    <LinearLayout
+        android:id="@+id/sendContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:background="@drawable/round_rectangle"
+        android:backgroundTint="@color/darkGrey"
+        android:orientation="horizontal"
+        android:padding="1dp">
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_above="@id/etMessage"
-            android:stackFromBottom="true"
-            android:layout_marginBottom="15dp"
-            android:divider="@null"
-            android:dividerHeight="0dp"
+            android:layout_height="wrap_content"
+            android:background="@drawable/round_rectangle"
+            android:backgroundTint="@color/lightGrey"
+            android:orientation="horizontal"
+            android:padding="4dp"
+            android:paddingEnd="7dp"
+            android:paddingStart="20dp"
+        >
+
+            <EditText
+                android:id="@+id/etMessage"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_weight="1"
+                android:background="@android:color/transparent"
+                android:hint="@string/message"
+                android:inputType="textAutoCorrect|textCapSentences"
+                android:labelFor="@id/etMessage"
+                android:textColor="@color/black"
+                android:textColorHint="@color/grey"
+            />
+
+            <ImageButton
+                android:id="@+id/btnSend"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_weight="0"
+                android:background="@drawable/circle"
+                android:backgroundTint="@color/darkGrey"
+                android:contentDescription="@string/send_button"
+                android:enabled="false"
+                android:padding="5dp"
+                android:src="@drawable/ic_arrow_upward_black_24dp"
+                android:text="@string/send"
+                android:tint="@color/white"
+            />
+        </LinearLayout>
+    </LinearLayout>
+
+    <ListView
+        android:id="@+id/lvMessages"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/sendContainer"
+        android:layout_marginBottom="15dp"
+        android:divider="@null"
+        android:dividerHeight="0dp"
+        android:stackFromBottom="true"
     >
 
     </ListView>

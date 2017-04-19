@@ -9,6 +9,19 @@ import java.util.TimeZone;
  */
 public class Constants {
 
+    static final String CHARSET = "UTF-8";
+    static final String AES = "AES";
+    static final String AES_PADDING = "AES/CBC/PKCS5PADDING";
+    static final String IV = "iv";
+    static final int SECRET_PAD_LEN = 16;
+    static final String ME = "Me";
+    static final String NUM_MESSAGES = "numMessages";
+    static final String ACTION = "action";
+    static final String TEST_DATA = "Pie Message encryption test";
+    static final String ENCRYPTED = "encryptedMsg";
+    static final String SUCCESS = "success";
+    static final String INCOMING = "incomingMessages";
+
     static long getNowEpochSeconds() {
         return (getNowMilliseconds() - get2001Milliseconds()) / 1000;
     }
@@ -32,21 +45,6 @@ public class Constants {
         return System.currentTimeMillis();
     }
 
-    static final String CHARSET = "UTF-8";
-    static final String AES = "AES";
-    static final String AES_PADDING = "AES/CBC/PKCS5PADDING";
-    static final String IV = "iv";
-    static final int SECRET_PAD_LEN = 16;
-
-    static final String ME = "Me";
-
-    static final String NUM_MESSAGES = "numMessages";
-    static final String ACTION = "action";
-    static final String TEST_DATA = "Pie Message encryption test";
-    static final String ENCRYPTED = "encryptedMsg";
-    static final String SUCCESS = "success";
-    static final String INCOMING = "incomingMessages";
-
     static class Action {
         static final String EST = "establish";
         static final String REQ = "requestNew";
@@ -58,6 +56,7 @@ public class Constants {
         static final String ID = "id";
         static final String DATE = "date";
         static final String MSG = "msg";
+        c
         static final String SENDER = "sender";
         static final String IS_SENT = "isSent";
         static final String IS_READ = "isRead";
