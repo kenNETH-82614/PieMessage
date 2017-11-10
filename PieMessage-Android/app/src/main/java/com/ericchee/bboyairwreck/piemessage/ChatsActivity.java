@@ -20,11 +20,21 @@ import java.util.Collections;
 import java.util.Comparator;
 
 
+<<<<<<< HEAD
 public class ChatsActivity extends Activity {
     private static final String TAG = ChatsActivity.class.getSimpleName();
     private static final int SETTINGS_RESULT = 1;
     private SwipeRefreshLayout swipeContainer;
     private ListView lvChats;
+=======
+public class ChatsActivity extends AppCompatActivity implements ReceiveMessagesService.Callbacks {
+    public static final String TAG = ChatsActivity.class.getSimpleName();
+    private ListView lvChats;
+    private ChatsAdapter chatsAdapter;
+    private ArrayList<Chat> chatsList;
+    ReceiveMessagesService receiveMessagesService;
+    private boolean boundReceiveService = false;
+>>>>>>> parent of fec3bbf... Merge pull request #17 from bboyairwreck/ericChee-UniversalAPKWithIPAddressInput
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -127,8 +137,6 @@ public class ChatsActivity extends Activity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
-            Intent piePreferenceIntent = new Intent(this, PiePreferenceActivity.class);
-            startActivityForResult(piePreferenceIntent, SETTINGS_RESULT);
             return true;
         }
 

@@ -9,6 +9,7 @@ import java.util.TimeZone;
 /**
  * Created by eric on 12/8/15.
  */
+<<<<<<< HEAD
 class Constants {
 
     static long getNowEpochSeconds() {
@@ -70,4 +71,11 @@ class Constants {
         static final String CHAT_ID = "chatId";
         static final String CHAT_NAME = "chatName";
     }
+=======
+public class Constants {
+    public static final String socketAddress = "127.0.0.1"; // INSERT YOUR PUBLIC IP HERE linked to OSX Client
+
+    public static final String chatROWID = "chat_rowid";
+    public static final String chatHandlesString = "chatHandlesString";
+>>>>>>> parent of fec3bbf... Merge pull request #17 from bboyairwreck/ericChee-UniversalAPKWithIPAddressInput
 }

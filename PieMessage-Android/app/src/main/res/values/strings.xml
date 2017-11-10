@@ -6,6 +6,7 @@
     <string name="title_activity_conversation">ConversationActivity</string>
     <string name="reply_label">Reply</string>
 
+<<<<<<< HEAD
     <string name="pref_socket_address_key">prefSocketAddress</string>
     <string name="pref_password">prefPassword</string>
     <string name="ask_ip">Server IP Address</string>
@@ -28,4 +29,7 @@
     <string name="send_button">Send button</string>
     <string name="message">Message</string>
     <string name="info_button">Info button</string>
+=======
+    <string name="hello_world">Hello world!</string>
+>>>>>>> parent of fec3bbf... Merge pull request #17 from bboyairwreck/ericChee-UniversalAPKWithIPAddressInput
 </resources>

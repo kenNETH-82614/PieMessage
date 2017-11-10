@@ -1,8 +1,12 @@
 package com.ericchee.bboyairwreck.piemessage;
 
 import android.app.Application;
+<<<<<<< HEAD
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+=======
+import android.content.Intent;
+>>>>>>> parent of fec3bbf... Merge pull request #17 from bboyairwreck/ericChee-UniversalAPKWithIPAddressInput
 import android.util.Log;
 
 import java.io.IOException;
@@ -40,6 +44,7 @@ public class PieMessageApplication extends Application {
         startServerBridge();
     }
 
+<<<<<<< HEAD
     void startServerBridge() {
         if (serverBridge != null) {
             Log.i(TAG, "Stopping server bridge");
@@ -62,6 +67,10 @@ public class PieMessageApplication extends Application {
 
     synchronized TreeMap<String, Chat> getChats() {
         return chats;
+=======
+        Intent receiveService = new Intent(this, ReceiveMessagesService.class);
+        startService(receiveService);
+>>>>>>> parent of fec3bbf... Merge pull request #17 from bboyairwreck/ericChee-UniversalAPKWithIPAddressInput
     }
 
     void addMessage(Message message) {
